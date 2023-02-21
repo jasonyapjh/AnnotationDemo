@@ -1,0 +1,119 @@
+﻿<UserControl x:Class="AnnotationOpenSource.Shell.MainContent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:AnnotationOpenSource.Shell"
+             xmlns:prism="http://prismlibrary.com/"
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:MB="clr-namespace:AnnotationOpenSource.Framework"
+             xmlns:const="clr-namespace:AnnotationOpenSource.Framework"
+             xmlns:xceed="http://schemas.xceed.com/wpf/xaml/toolkit"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Base;component/Resources/Resources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="5*"/>
+            <RowDefinition Height="5"/>
+            <RowDefinition Height="0.58*"/>
+        </Grid.RowDefinitions>
+
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.3*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="1" Source="{Binding StationAWindow}"/>
+            <Canvas Grid.Column="1" x:Name="LayoutRoot" Background="White">
+
+                <i:Interaction.Behaviors>
+                    <MB:MouseBehaviour 
+                        MouseX="{Binding PanelX, Mode=OneWayToSource}"
+                        MouseY="{Binding PanelY, Mode=OneWayToSource}"
+                        />
+                </i:Interaction.Behaviors>
+
+                <Rectangle 
+                    x:Name="testSquare"
+                    Fill="Red" Height="100"
+                    Stroke="Black"
+                    Width="100"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Canvas.Left="{Binding RectX, Mode=TwoWay}"
+                    Canvas.Top="{Binding RectY, Mode=TwoWay}"  >
+
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="PreviewMouseDown" >
+                            <i:InvokeCommandAction 
+                                Command="{Binding ElementName=testSquare, Path=DataContext.LeftMouseButtonDown}"
+                                CommandParameter="{Binding}" />
+                        </i:EventTrigger>
+
+                        <i:EventTrigger EventName="PreviewMouseUp" >
+                            <i:InvokeCommandAction 
+                                Command="{Binding ElementName=testSquare, Path=DataContext.LeftMouseButtonUp}"
+                                CommandParameter="{Binding}" />
+                        </i:EventTrigger>
+
+                        <i:EventTrigger EventName="PreviewMouseMove" >
+                            <i:InvokeCommandAction 
+                                Command="{Binding ElementName=testSquare, Path=DataContext.PreviewMouseMove}"
+                                CommandParameter="{Binding}" />
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+
+                </Rectangle>
+            </Canvas>
+            <Grid Grid.Column="2">
+                <TabControl>
+                    <TabItem Header="Run">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="1">
+                                <xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding Configuration}" PropertyNameLeftPadding="10"/>
+
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Train"/>
+                </TabControl>
+
+            </Grid>
+        </Grid>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="Test" Foreground="Black" Command="{Binding ClickProductionCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}">
+            </Button>
+            <Button Grid.Column="2" Content="Test2" Foreground="Black" Command="{Binding ClickTeachCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}">
+            </Button>
+
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,9 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Base.Resources">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Base;component/Resources/ButtonBorder/Base_ButtonBorder.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+
+</ResourceDictionary>

@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="IS.Dialogs.ErrorMessageBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:IS.Dialogs"
+             xmlns:prism="http://prismlibrary.com/"
+             mc:Ignorable="d" 
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             d:DesignHeight="450" d:DesignWidth="1000">
+    <prism:Dialog.WindowStyle>
+        <Style TargetType="Window">
+            <Setter Property="Height" Value="400"/>
+            <Setter Property="Width" Value="1000"/>
+            <Setter Property="ResizeMode" Value="NoResize"/>
+            <Setter Property="prism:Dialog.WindowStartupLocation" Value="CenterScreen"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="AllowsTransparency" Value="True"/>
+            <Setter Property="WindowStyle" Value="None"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+    </prism:Dialog.WindowStyle>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="..\Resources\IS_Resources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border BorderBrush="#E62E46" BorderThickness="2" CornerRadius="4" Background="#997A2316">
+        <Grid Height="400" Width="1000" VerticalAlignment="Center">
+            <Rectangle Width="76" Height="76" Margin="60,60,10,168" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="#E62E46">
+                <Rectangle.OpacityMask>
+                    <VisualBrush Stretch="Fill" Visual="{StaticResource IS_Icon_Alert}"/>
+                </Rectangle.OpacityMask>
+            </Rectangle>
+            <TextBlock FontFamily=" Sora SemiBold" FontSize="60" Foreground="White" Margin="160,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="Alert!"/>
+
+            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="White" FontSize="20" FontFamily="Sora Regular" Margin="164,160" TextWrapping="Wrap" Text="{Binding ErrTitle}"/>
+            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" Foreground="White" FontSize="18" FontFamily="Sora Regular" Margin="164,210,0,0" TextWrapping="Wrap" Text="{Binding ErrMessages}"/>
+            <Button Command="{Binding AckCommand}" Content="Ok" Style="{StaticResource AlertActionButton}" Width="100" FontWeight="Medium" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="60"/>
+        </Grid>
+    </Border>
+</UserControl>
