@@ -8,6 +8,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using OpenCvSharp;
+using System.Drawing;
+using OpenCvSharp.Extensions;
+using Base.Vision.Framework;
+using static System.Net.Mime.MediaTypeNames;
+using Point = OpenCvSharp.Point;
+using System.Runtime.Remoting.Channels;
 
 namespace Base.Vision.Tool
 {
@@ -15,9 +22,9 @@ namespace Base.Vision.Tool
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public class OCRShapeMatchConfig : BaseConfig
     {
-        public string OCRTrainedImage { get; set; } = @"C:\Users\jason.yap\source\repos\AnnotationsCreator\AnnotationsCreator\bin\x64\Vision Setting\System Setting\bcssemi.png";
-        public string OCRBrightFieldRefImage { get; set; } = @"C:\Users\jason.yap\source\repos\AnnotationsCreator\AnnotationsCreator\bin\x64\Vision Setting\System Setting\BrightFieldRef.jpg";
-        public string OCRDarkFieldRefImage { get; set; } = @"C:\Users\jason.yap\source\repos\AnnotationsCreator\AnnotationsCreator\bin\x64\Vision Setting\System Setting\DarkFieldRef.jpg";
+        public string OCRTrainedImage { get; set; } = @"..\System Setting\bcssemi2.png";
+        public string OCRBrightFieldRefImage { get; set; } = @"..\System Setting\BrightFieldRef.jpg";
+        public string OCRDarkFieldRefImage { get; set; } = @"..\System Setting\DarkFieldRef.jpg";
         public int OCRDarkFieldThreshold { get; set; } = 128;
         public int OCRCharWidth { get; set; } = 30;
         public int OCRCharHeight { get; set; } = 30;
@@ -95,9 +102,72 @@ namespace Base.Vision.Tool
             this.Config = config;
             config.PropertyChanged += Config_PropertyChanged;
         }
-        public void Setup()
+        public bool Setup(out InspectionData inspectionData)
         {
+            InspectionData SetupResult = new InspectionData();
+            Mat ReadTrainingImage = new Mat(config.OCRTrainedImage);
+            Mat TrainImage = new Mat();
+            Mat BrightFieldRef = new Mat(config.OCRBrightFieldRefImage);
+            Mat DarkFieldRef = new Mat(config.OCRDarkFieldRefImage);
+            
+            if (ReadTrainingImage.Channels()> 1)
+            {
+                Cv2.CvtColor(ReadTrainingImage, TrainImage, ColorConversionCodes.BGRA2GRAY);
+            }
+            else
+            {
+                ReadTrainingImage.CopyTo(TrainImage);
+            }
 
+            Rect ROI_Char = Rect.FromLTRB(10, 2, 430, 129);
+            Rect ROI_Number = Rect.FromLTRB(7, 125, 330, 190);
+
+            Mat Display_TrainImage = TrainImage.Clone();
+            
+
+            Cv2.Rectangle(Display_TrainImage, ROI_Char, new Scalar(0, 0, 255, 255), 2);
+            Cv2.Rectangle(Display_TrainImage, ROI_Number, new Scalar(0, 0, 255, 255), 2);
+
+            Mat CharDomain = new Mat(TrainImage, ROI_Char);
+            Mat NumberDomain = new Mat(TrainImage, ROI_Number);
+
+            CharDomain.Threshold(0, 60, ThresholdTypes.Binary);
+          
+
+            Mat Closing = new Mat();
+            Mat kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new OpenCvSharp.Size(3, 3));
+            Cv2.MorphologyEx(CharDomain, CharDomain, MorphTypes.Close, kernel);
+           
+
+            NumberDomain.Threshold(0, 60, ThresholdTypes.Binary);
+            SetupResult.ResultOutput.Add(new MatInfo(Display_TrainImage, "", "Sample"));
+            SetupResult.ResultOutput.Add(new MatInfo(BrightFieldRef, "", "Bright"));
+            SetupResult.ResultOutput.Add(new MatInfo(DarkFieldRef, "", "Dark"));
+            SetupResult.ResultOutput.Add(new MatInfo(CharDomain, "", "Char Domain"));
+
+
+            SetupResult.ResultOutput.Add(new MatInfo(NumberDomain, "", "Number Domain"));
+       
+            //Mat Display_CharDomain = CharDomain.Clone();
+            Point[][] contours;
+            HierarchyIndex[] hierarchyIndexes;
+            Cv2.FindContours(CharDomain, out contours, out hierarchyIndexes, mode: RetrievalModes.CComp, 
+                method: ContourApproximationModes.ApproxSimple);
+
+            for (int i = 0; i < contours.Length; i++)
+            {
+                if (contours[i].Length>7)
+                {
+                    var Display_CharDomain = CharDomain.Clone();
+                    //Cv2.DrawContours(Display_CharDomain, contours, i, new Scalar(0, 0, 255, 255));
+                    var biggestContourRect = Cv2.BoundingRect(contours[i]);
+                    Cv2.Rectangle(Display_CharDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 2);
+                    SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain, "", "Contour " + i.ToString()));
+                }
+                
+            }
+            inspectionData = SetupResult;
+            return true;     
         }
     }
 }
