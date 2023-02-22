@@ -18,14 +18,21 @@ using Prism.Commands;
 using System.ComponentModel;
 using Base.Vision.Tool.Base;
 using Base.Vision;
+using System.Collections.ObjectModel;
+using Prism.Mvvm;
+using Base.Vision.Tool;
+using Base.Vision.Framework;
+using static System.Net.Mime.MediaTypeNames;
+using System.Windows;
+using Rect = OpenCvSharp.Rect;
 
 namespace AnnotationOpenSource.Shell
 {
     public class MainContentViewModel : BaseViewModel
     {
-        private BaseConfig _configuration;
+        private OCRShapeMatchConfig _configuration;
 
-        public BaseConfig Configuration
+        public OCRShapeMatchConfig Configuration
         {
             get { return _configuration; }
             set { SetProperty(ref _configuration, value); }
@@ -35,21 +42,29 @@ namespace AnnotationOpenSource.Shell
         public DelegateCommand<Object> LeftMouseButtonDown { get; set; }
         public DelegateCommand<Object> LeftMouseButtonUp { get; set; }
         public DelegateCommand<Object> PreviewMouseMove { get; set; }
+        public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
+        public ObservableCollection<DisplayObject> DisplayCollection { get; private set; }
+
+        public OCRShapeMatchTool OCRTool;
         public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService) : base(containerExtension, eventAggregator, regionManager, dialogService)
         {
             ClickProductionCommand = new DelegateCommand<object>(OnClickProductionCommand);
             LeftMouseButtonDown = new DelegateCommand<object>(OnLeftMouseButtonDown);
             LeftMouseButtonUp = new DelegateCommand<object>(OnLeftMouseButtonUp);
             PreviewMouseMove = new DelegateCommand<object>(OnPreviewMouseMove);
-            Configuration = new BaseConfig();
+            Configuration = new OCRShapeMatchConfig();
+            EnableRegionCollection = new ObservableCollection<EnableRegionCollector>();
+            Configuration = new OCRShapeMatchConfig();
+            OCRTool = new OCRShapeMatchTool(Configuration);
+            DisplayCollection = new ObservableCollection<DisplayObject>();
         }
 
         private void OnPreviewMouseMove(object obj)
         {
             if (captured)
             {
-                RectX = PanelX - 50.0;
-                RectY = PanelY - 50.0;
+                RectX = PanelX - 10.0;
+                RectY = PanelY - 10.0;
             }
         }
 
@@ -65,42 +80,66 @@ namespace AnnotationOpenSource.Shell
 
         private void OnClickProductionCommand(object obj)
         {
-            PanelX = 100;
-            PanelY = 100;
-            RectX = PanelX - 50.0;
-            RectY = PanelY - 50.0;
-            //ContentControl CC = new ContentControl();
-            Regions.RequestNavigate(RegionManagerEntity.WorkspaceRegionSource, ScreenEntity.ProductionView);
-            OpenFileDialog openPic = new OpenFileDialog();
-            if (openPic.ShowDialog() == true)
+
+            if (OCRTool.Setup(out InspectionData test))
             {
-
-                var img = new Mat(openPic.FileName, ImreadModes.Unchanged);
-                Bitmap bitmap = img.ToBitmap();
-                StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
-
-                Rect rect = new Rect(10, 10, 30, 30);
-                // StationAWindow = OpenCV.MatToBitmapImage(img);
-                // Bitmap test = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(img);
-                // test.ToBitmapSource();
-                // StationAWindow = BitmapSourceConverter
-                //OpenCV.AttachImage(StationAWindow, bitmap);
-
-                //CC.Content = new ImageInfo() { StationAWindow = MatToBitmapImage(img) };
-
-                //Cv2
-                //    Image<Gray, byte> gambarAbu = gambar.Convert<Gray, byte>();
-                //   myGreyImage.Source = Emgu.CV.WPF.BitmapSourceConvert.ToBitmapSource(gambarAbu);
-                /*using (var iplImage = new Mat(@"..\..\Images\Penguin.png", ImreadModes.AnyDepth | ImreadModes.AnyColor))
+                DisplayCollection.Clear();
+                for (int i = 0; i < test.ResultOutput.Count; i++)
                 {
-                    Cv2.Dilate(iplImage, iplImage, new Mat());
-
-                    myImage.Source = iplImage.ToWriteableBitmap(PixelFormats.Bgr24);
-                }*/
+                    DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
+                }
             }
+        
         }
 
+        public class RectItem
+        {
+            public double X { get; set; }
+            public double Y { get; set; }
+            public double Width { get; set; }
+            public double Height { get; set; }
+        }
+        #region EnableRegion
+        public class EnableRegionCollector : BindableBase
+        {
+            private string m_ShapeName;
+            private RectItem m_rect;
+            public string Key
+            {
+                get { return this.m_ShapeName; }
+                set { SetProperty(ref m_ShapeName, value); }
+            }
+            public RectItem Shape
+            {
+                get { return this.m_rect; }
+                set
+                {
+                    SetProperty(ref m_rect, value);
+                }
+            }
 
+            public EnableRegionCollector(string name, RectItem enable)
+            {
+                Key = name;
+                Shape = enable;
+            }
+        }
+        private EnableRegionCollector m_EnabledShape;
+        public EnableRegionCollector SelectedRegion
+        {
+            get { return this.m_EnabledShape; }
+            set 
+            { 
+                SetProperty(ref m_EnabledShape, value);
+                RectWidth = value.Shape.Width;
+                RectHeight = value.Shape.Height;
+                PanelX = RectWidth;
+                PanelY = RectHeight;
+                RectX = value.Shape.X;
+                RectY = value.Shape.Y;
+            }
+        }
+        #endregion
         public override bool IsNavigationTarget(NavigationContext navigationContext)
         {
             return true;
@@ -118,6 +157,23 @@ namespace AnnotationOpenSource.Shell
         }
 
         #region Properties
+        #region Display View Collector
+        private DisplayObject m_SelectedDisplay;
+        public DisplayObject SelectedDisplay
+        {
+            get { return this.m_SelectedDisplay; }
+            set
+            {
+                SetProperty(ref m_SelectedDisplay, value);
+              
+                if (SelectedDisplay != null)
+                {
+                    Bitmap bitmap = SelectedDisplay.MatObjects.ToBitmap();
+                    StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap); 
+                }
+            }
+        }
+        #endregion
         private BitmapSource _stationAWindow;
 
         public BitmapSource StationAWindow
@@ -129,7 +185,27 @@ namespace AnnotationOpenSource.Shell
         private double _panelY;
         private double _rectX;
         private double _rectY;
+        private double _rectWidth;
+        private double _rectHeight;
 
+        public double RectWidth
+        {
+            get { return _rectWidth; }
+            set
+            {
+                if (value.Equals(_rectWidth)) return;
+                SetProperty(ref this._rectWidth, value);
+            }
+        }
+        public double RectHeight
+        {
+            get { return _rectHeight; }
+            set
+            {
+                if (value.Equals(_rectHeight)) return;
+                SetProperty(ref this._rectHeight, value);
+            }
+        }
         public double RectX
         {
             get { return _rectX; }

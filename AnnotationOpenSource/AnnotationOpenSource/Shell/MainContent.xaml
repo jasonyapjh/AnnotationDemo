@@ -17,6 +17,74 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Base;component/Resources/Resources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="ScrollViewerCtrlTemplate" TargetType="{x:Type ScrollViewer}">
+                <Setter Property="OverridesDefaultStyle"
+            Value="True" />
+                <Setter Property="Background" Value="{StaticResource Table_BackgroundBrush}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ScrollViewer}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <ScrollContentPresenter CanContentScroll="{TemplateBinding CanContentScroll}" />
+                                <Border BorderThickness="0,0,0,0" BorderBrush="{StaticResource FontColorBrush}"
+                            Grid.Column="1" Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}">
+                                    <ScrollBar x:Name="PART_VerticalScrollBar"
+                                Style="{StaticResource ViewerScrollBar}"
+                                Value="{TemplateBinding VerticalOffset}"
+                                Maximum="{TemplateBinding ScrollableHeight}"
+                                ViewportSize="{TemplateBinding ViewportHeight}"
+                                Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                Background="{TemplateBinding Background}"/>
+                                </Border>
+                                <Border BorderThickness="0,0,0,0" BorderBrush="{StaticResource FontColorBrush}"
+                            Grid.Row="1" Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}">
+                                    <ScrollBar x:Name="PART_HorizontalScrollBar"
+                                Style="{StaticResource ViewerScrollBar}"
+                                Orientation="Horizontal"
+                                Grid.Column="0"
+                                Value="{TemplateBinding HorizontalOffset}"
+                                Maximum="{TemplateBinding ScrollableWidth}"
+                                ViewportSize="{TemplateBinding ViewportWidth}"
+                                Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                Background="{TemplateBinding Background}"/>
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="VisionToolListBox" TargetType="ListBox">
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+                <Setter Property="ScrollViewer.CanContentScroll" Value="true"/>
+                <Setter Property="ScrollViewer.PanningMode" Value="Both"/>
+                <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListBox}">
+                            <Border x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Padding="1" SnapsToDevicePixels="true">
+                                <ScrollViewer x:Name="ScrollBar"
+                                                    Style="{StaticResource ScrollViewerCtrlTemplate}"
+                                                    Padding="{TemplateBinding Padding}"
+                                                    Focusable="False"
+                                                    CanContentScroll="True">
+                                    <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                </ScrollViewer>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -35,20 +103,40 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Image Grid.Column="1" Source="{Binding StationAWindow}"/>
-            <Canvas Grid.Column="1" x:Name="LayoutRoot" Background="White">
+            <!--ItemsControl ItemsSource="{Binding RectItems}" Grid.Column="1">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                        <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Rectangle Width="{Binding Width}" Height="{Binding Height}" Fill="Black">
+
+                        </Rectangle>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl-->
+            <Canvas Grid.Column="1" x:Name="LayoutRoot">
 
                 <i:Interaction.Behaviors>
                     <MB:MouseBehaviour 
-                        MouseX="{Binding PanelX, Mode=OneWayToSource}"
-                        MouseY="{Binding PanelY, Mode=OneWayToSource}"
+                        MouseX="{Binding PanelX, Mode=TwoWay}"
+                        MouseY="{Binding PanelY, Mode=TwoWay}"
                         />
                 </i:Interaction.Behaviors>
 
                 <Rectangle 
                     x:Name="testSquare"
-                    Fill="Red" Height="100"
+                    Fill="Transparent" Height="{Binding RectHeight}"
                     Stroke="Black"
-                    Width="100"
+                    Width="{Binding RectWidth}"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Canvas.Left="{Binding RectX, Mode=TwoWay}"
@@ -84,13 +172,47 @@
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
+                            <Grid Grid.Row="0">
+                                <DataGrid AutoGenerateColumns="False" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" CanUserAddRows="False" ItemsSource="{Binding EnableRegionCollection}" 
+                                          CanUserResizeRows="True" AreRowDetailsFrozen="True" HeadersVisibility="All" SelectedItem="{Binding SelectedRegion}"
+                                          FontSize="18" FontFamily="Sora Regular" Padding="-1" VerticalScrollBarVisibility="Visible">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Shape" Binding="{Binding Path=Key}"/>
+                                        <!--DataGridCheckBoxColumn Header="Enable" Binding="{Binding Enable, UpdateSourceTrigger=PropertyChanged}">
+                                            <DataGridCheckBoxColumn.ElementStyle>
+                                                <Style TargetType="CheckBox">
+                                                    <Setter Property="Padding" Value="0"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridCheckBoxColumn.ElementStyle>
+                                        </DataGridCheckBoxColumn-->
+                                    </DataGrid.Columns>
+
+                                </DataGrid>
+
+                            </Grid>
                             <Grid Grid.Row="1">
-                                <xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding Configuration}" PropertyNameLeftPadding="10"/>
+                                <!--xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding Configuration}" PropertyNameLeftPadding="10"/-->
 
                             </Grid>
                         </Grid>
                     </TabItem>
-                    <TabItem Header="Train"/>
+                    <TabItem Header="Train">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0">
+                                <ListBox Grid.Row="1" HorizontalAlignment="Stretch" Margin="10" VerticalAlignment="Stretch" FontSize="12" 
+                                     ScrollViewer.VerticalScrollBarVisibility="Visible" ItemsSource="{Binding DisplayCollection, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedDisplay}"/>
+                            </Grid>
+                            <Grid Grid.Row="1">
+                                <xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding Configuration}" PropertyNameLeftPadding="10"/>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
                 </TabControl>
 
             </Grid>

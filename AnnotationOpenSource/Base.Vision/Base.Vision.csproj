@@ -44,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Const.cs" />
+    <Compile Include="Framework\DisplayObject.cs" />
+    <Compile Include="Framework\InspectionData.cs" />
     <Compile Include="OpenCV.cs" />
     <Compile Include="Shapes\Base\Shape.cs" />
     <Compile Include="Shapes\Circle.cs" />
