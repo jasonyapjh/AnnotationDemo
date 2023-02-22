@@ -145,7 +145,9 @@ namespace Base.Vision.Tool
             SetupResult.ResultOutput.Add(new MatInfo(DarkFieldRef, "", "Dark"));
             SetupResult.ResultOutput.Add(new MatInfo(CharDomain, "", "Char Domain"));
 
-
+            Mat Resized = new Mat();
+            Cv2.Resize(CharDomain, Resized, OpenCvSharp.Size.Zero, 2, 2);
+            SetupResult.ResultOutput.Add(new MatInfo(Resized, "", "Resized"));
             SetupResult.ResultOutput.Add(new MatInfo(NumberDomain, "", "Number Domain"));
        
             //Mat Display_CharDomain = CharDomain.Clone();
@@ -166,6 +168,8 @@ namespace Base.Vision.Tool
                 }
                 
             }
+
+            
             inspectionData = SetupResult;
             return true;     
         }
