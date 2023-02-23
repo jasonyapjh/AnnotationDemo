@@ -173,6 +173,7 @@ namespace Base.Vision.Tool
 
             }
 
+            
             inspectionData = SetupResult;
             return true;     
         }
