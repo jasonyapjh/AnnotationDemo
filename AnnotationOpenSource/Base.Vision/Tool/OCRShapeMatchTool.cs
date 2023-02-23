@@ -136,36 +136,55 @@ namespace Base.Vision.Tool
 
             Mat Closing = new Mat();
             Mat kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new OpenCvSharp.Size(3, 3));
-            Cv2.MorphologyEx(CharDomain, CharDomain, MorphTypes.Close, kernel);
-           
+            Cv2.MorphologyEx(CharDomain, CharDomain, MorphTypes.Open, kernel);
+            Mat Canny = new Mat();
+            Cv2.Canny(CharDomain, Canny, 0, 100);
 
             NumberDomain.Threshold(0, 60, ThresholdTypes.Binary);
+            
             SetupResult.ResultOutput.Add(new MatInfo(Display_TrainImage, "", "Sample"));
             SetupResult.ResultOutput.Add(new MatInfo(BrightFieldRef, "", "Bright"));
             SetupResult.ResultOutput.Add(new MatInfo(DarkFieldRef, "", "Dark"));
             SetupResult.ResultOutput.Add(new MatInfo(CharDomain, "", "Char Domain"));
-
+            SetupResult.ResultOutput.Add(new MatInfo(Canny, "", "Canny"));
 
             SetupResult.ResultOutput.Add(new MatInfo(NumberDomain, "", "Number Domain"));
        
             //Mat Display_CharDomain = CharDomain.Clone();
             Point[][] contours;
             HierarchyIndex[] hierarchyIndexes;
-            Cv2.FindContours(CharDomain, out contours, out hierarchyIndexes, mode: RetrievalModes.CComp, 
+            Cv2.FindContours(Canny, out contours, out hierarchyIndexes, mode: RetrievalModes.External, 
                 method: ContourApproximationModes.ApproxSimple);
 
-            for (int i = 0; i < contours.Length; i++)
+            var orderedContours = contours.OrderBy(c => Cv2.BoundingRect(c).X).ToArray();
+            for (int i = 0; i < orderedContours.Length; i++)
             {
-                if (contours[i].Length>7)
+                if (orderedContours[i].Length > 7)
                 {
                     var Display_CharDomain = CharDomain.Clone();
                     //Cv2.DrawContours(Display_CharDomain, contours, i, new Scalar(0, 0, 255, 255));
-                    var biggestContourRect = Cv2.BoundingRect(contours[i]);
+                    var biggestContourRect = Cv2.BoundingRect(orderedContours[i]);
                     Cv2.Rectangle(Display_CharDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 2);
                     SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain, "", "Contour " + i.ToString()));
                 }
-                
+
             }
+            /*Point[][] contours;
+            HierarchyIndex[] hierarchyIndexes;
+            Cv2.FindContours(CharDomain, out contours, out hierarchyIndexes, mode: RetrievalModes.List,
+                method: ContourApproximationModes.ApproxSimple);
+             for (int i = 0; i < contours.Length; i++)
+             {
+                 if (contours[i].Length>7)
+                 {
+                     var Display_CharDomain = CharDomain.Clone();
+                     //Cv2.DrawContours(Display_CharDomain, contours, i, new Scalar(0, 0, 255, 255));
+                     var biggestContourRect = Cv2.BoundingRect(contours[i]);
+                     Cv2.Rectangle(Display_CharDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 2);
+                     SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain, "", "Contour " + i.ToString()));
+                 }
+
+             }*/
             inspectionData = SetupResult;
             return true;     
         }
