@@ -148,6 +148,9 @@ namespace Base.Vision.Tool
             SetupResult.ResultOutput.Add(new MatInfo(CharDomain, "", "Char Domain"));
             SetupResult.ResultOutput.Add(new MatInfo(Canny, "", "Canny"));
 
+            Mat Resized = new Mat();
+            Cv2.Resize(CharDomain, Resized, OpenCvSharp.Size.Zero, 2, 2);
+            SetupResult.ResultOutput.Add(new MatInfo(Resized, "", "Resized"));
             SetupResult.ResultOutput.Add(new MatInfo(NumberDomain, "", "Number Domain"));
        
             //Mat Display_CharDomain = CharDomain.Clone();
@@ -169,22 +172,7 @@ namespace Base.Vision.Tool
                 }
 
             }
-            /*Point[][] contours;
-            HierarchyIndex[] hierarchyIndexes;
-            Cv2.FindContours(CharDomain, out contours, out hierarchyIndexes, mode: RetrievalModes.List,
-                method: ContourApproximationModes.ApproxSimple);
-             for (int i = 0; i < contours.Length; i++)
-             {
-                 if (contours[i].Length>7)
-                 {
-                     var Display_CharDomain = CharDomain.Clone();
-                     //Cv2.DrawContours(Display_CharDomain, contours, i, new Scalar(0, 0, 255, 255));
-                     var biggestContourRect = Cv2.BoundingRect(contours[i]);
-                     Cv2.Rectangle(Display_CharDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 2);
-                     SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain, "", "Contour " + i.ToString()));
-                 }
 
-             }*/
             inspectionData = SetupResult;
             return true;     
         }
