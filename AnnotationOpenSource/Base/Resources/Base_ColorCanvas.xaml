@@ -1,0 +1,59 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options">
+
+
+    <SolidColorBrush x:Key="IS_ColorBackground" Color="#121314" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorBackgroundTitle" Color="#1E1F22" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorBackgroundTitleBorder" Color="#191A1C" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorBackgroundSubTitle" Color="#1E1F22" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorBackgroundSubTitleBorder" Color="#2D2E33" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorBorder" Color="#070707" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="IS_ColorTextNavigationSelected" Color="#9ADDBD" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorTextSubNavigationSelected" Color="#26D07C" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorTextNavigation" Color="#69917F" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorTextSubNavigation" Color="#69917F" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="IS_ButtonSubNavigation" Color="#191A1C" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ButtonSubNavigationSelected" Color="#252629" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ButtonNavigation" Color="#1E1F22" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ButtonNavigationSelected" Color="#1C332B" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="IS_ColorLegendsTested" Color="#26D07C" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorLegendsTestInPrgress" Color="#E6B400" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorLegendsReady" Color="#299BCC" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorLegendsError" Color="#E62E46" po:Freeze="True" />
+
+    <SolidColorBrush x:Key="IS_ColorTextSubTitle" Color="#616264" po:Freeze="True" />
+    <SolidColorBrush x:Key="IS_ColorTextSubText" Color="#616264" po:Freeze="True" />
+    
+    <!-- Border Brush -->
+    <SolidColorBrush x:Key="IS_ColorEditFontBrush" Color="#69917F" po:Freeze="True"/>
+
+    <!-- Background -->
+    <SolidColorBrush x:Key="IS_ColorDialogBackground" Color="#1E1F22" po:Freeze="True"/>
+
+    <!-- List View Background -->
+    <Color x:Key="Table_Background" >#1E1F22</Color>
+    <Color x:Key="BackgroundColor" >#121314</Color>
+    <SolidColorBrush x:Key="Table_BackgroundBrush" Color="{StaticResource Table_Background}" po:Freeze="True"/>
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" po:Freeze="True"/>
+    
+    <!-- Font Color -->
+    <Color x:Key="FontColor" >#616264</Color>
+    <Color x:Key="HighLightFontColor" >#26D07C</Color>
+    <Color x:Key="EditableFontColor" >#69917F</Color>
+    <Color x:Key="HeaderUnderline" >#2D2E33</Color>
+    
+    <SolidColorBrush x:Key="FontColorBrush" Color="{StaticResource FontColor}" po:Freeze="True"/>
+    <SolidColorBrush x:Key="HighLightFontColorBrush" Color="{StaticResource HighLightFontColor}" po:Freeze="True"/>
+    <SolidColorBrush x:Key="EditableFontColorBrush" Color="{StaticResource EditableFontColor}" po:Freeze="True"/>
+    <SolidColorBrush x:Key="EditableTextBoxBackgroundColorBrush" Color="{StaticResource HeaderUnderline}" po:Freeze="True"/>
+
+    <Color x:Key="Table_AlternateRow" >#191A1C</Color>
+    <Color x:Key="TableBorder" >#3B3C40</Color>
+    <SolidColorBrush x:Key="TableBorderBrush" Color="{StaticResource TableBorder}" po:Freeze="True"/>
+    <SolidColorBrush x:Key="TabItemBorderBrush" Color="#ACACAC" po:Freeze="True"/>
+    <Color x:Key="Scroll" >#474749</Color>
+</ResourceDictionary>
