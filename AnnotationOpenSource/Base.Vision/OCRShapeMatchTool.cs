@@ -2,8 +2,7 @@
 using Base.Vision.Framework;
 using Base.Vision.Shapes;
 using Base.Vision.Shapes.Base;
-using Base.Vision.VisionServer;
-using HalconDotNet;
+using Base.Vision.Tool.Base;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -79,7 +78,7 @@ namespace Base.Vision.Inspection_Tool
         public List<double> Confidence;
         public bool PassCheckSum;
     }
-    public class OCRShapeMatchTool : BaseTool
+  /*  public class OCRShapeMatchTool : BaseTool
     {
         //public OcrShapeResult OcrResult = new OcrShapeResult();
         public LightingMode LightingMode = LightingMode.DarkField;
@@ -577,10 +576,10 @@ namespace Base.Vision.Inspection_Tool
 
                 HOperatorSet.TupleConcat(DarkFieldNumModelIDs, DarkModelID, out DarkFieldNumModelIDs);
 
-                /*if (j < 8)
-                {
-                    HOperatorSet.TupleConcat(DarkFieldChecksumCharModelIDs, DarkModelID, out DarkFieldChecksumCharModelIDs);
-                }*/
+                //if (j < 8)
+               // {
+               //     HOperatorSet.TupleConcat(DarkFieldChecksumCharModelIDs, DarkModelID, out DarkFieldChecksumCharModelIDs);
+               // }
 
             }
             HOperatorSet.TupleLength(DarkFieldNumModelIDs, out HTuple Test);
@@ -646,6 +645,6 @@ namespace Base.Vision.Inspection_Tool
             return true;
 
         }
-    }
+    }*/
 
 }

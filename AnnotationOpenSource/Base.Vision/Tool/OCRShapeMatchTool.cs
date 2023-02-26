@@ -159,7 +159,7 @@ namespace Base.Vision.Tool
             Cv2.FindContours(Canny, out contours, out hierarchyIndexes, mode: RetrievalModes.External, 
                 method: ContourApproximationModes.ApproxSimple);
 
-            var orderedContours = contours.OrderBy(c => Cv2.BoundingRect(c).X).ToArray();
+            var orderedContours = contours.OrderBy(c => Cv2.BoundingRect(c).X).OrderBy(a=>Cv2.BoundingRect(a).Y).ToArray();
             for (int i = 0; i < orderedContours.Length; i++)
             {
                 if (orderedContours[i].Length > 7)
