@@ -15,6 +15,8 @@ using Base.Vision.Framework;
 using static System.Net.Mime.MediaTypeNames;
 using Point = OpenCvSharp.Point;
 using System.Runtime.Remoting.Channels;
+using System.Drawing.Text;
+using System.Windows.Media.Media3D;
 
 namespace Base.Vision.Tool
 {
@@ -105,6 +107,13 @@ namespace Base.Vision.Tool
         public bool Setup(out InspectionData inspectionData)
         {
             InspectionData SetupResult = new InspectionData();
+
+            double RefCharHeight = 0;
+            double RefCharWidth = 0;
+            double RealCharHeight = 0;
+            double RealCharWidth = 0;
+
+
             Mat ReadTrainingImage = new Mat(config.OCRTrainedImage);
             Mat TrainImage = new Mat();
             Mat BrightFieldRef = new Mat(config.OCRBrightFieldRefImage);
@@ -119,11 +128,99 @@ namespace Base.Vision.Tool
                 ReadTrainingImage.CopyTo(TrainImage);
             }
 
-            Rect ROI_Char = Rect.FromLTRB(10, 2, 430, 129);
+            Rect FirstAlpahbetRect = Rect.FromLTRB(9, 16, 37, 63);
+            Mat Display_TrainImage = TrainImage.Clone();
+            Cv2.Rectangle(Display_TrainImage, FirstAlpahbetRect, new Scalar(0, 0, 255, 255), 2);
+            SetupResult.ResultOutput.Add(new MatInfo(Display_TrainImage, "", "Sample"));
+
+            Mat FirstAlphabetMat = new Mat(TrainImage, FirstAlpahbetRect);
+            SetupResult.ResultOutput.Add(new MatInfo(FirstAlphabetMat, "", "FirstAlphabetMat"));
+            Mat Canny = new Mat();
+            Cv2.Canny(FirstAlphabetMat, Canny, 0, 100);
+
+            Point[][] FirstAlphabetContours;
+            HierarchyIndex[] hierarchyIndexes;
+            Cv2.FindContours(Canny, out FirstAlphabetContours, out hierarchyIndexes, mode: RetrievalModes.External,
+                method: ContourApproximationModes.ApproxSimple);
+
+            for (int i = 0; i < FirstAlphabetContours.Length; i++)
+            {
+                var Display_CharDomain = FirstAlphabetMat.Clone();
+                var biggestContourRect = Cv2.BoundingRect(FirstAlphabetContours[i]);
+                Cv2.Rectangle(Display_CharDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 1);
+                SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain, "", "Contour " + i.ToString()));
+                RefCharHeight = biggestContourRect.Height;
+                RefCharWidth = biggestContourRect.Width;
+            }
+
+            Mat Display_BrightRefImage = BrightFieldRef.Clone();
+
+            Rect RealCharROI = Rect.FromLTRB(668, 378, 715, 459);
+
+            Cv2.Rectangle(Display_BrightRefImage, RealCharROI, new Scalar(0, 255, 0, 255), 2);
+            RealCharHeight = RealCharROI.Height;
+            RealCharWidth = RealCharROI.Width;
+            SetupResult.ResultOutput.Add(new MatInfo(Display_BrightRefImage, "", "Display_BrightRefImage"));
+
+            double ScaleHeight = RealCharHeight / RefCharHeight;
+            double ScaleWidth = RealCharWidth / RefCharWidth;
+            double scale_percent = 0;
+            if (ScaleHeight > ScaleWidth)
+            {
+                scale_percent = ScaleHeight;
+            }
+            else
+                scale_percent = ScaleWidth;
+
+            OpenCvSharp.Size NewImageSize = new OpenCvSharp.Size((TrainImage.Width * scale_percent), (TrainImage.Height * scale_percent));
+
+            // Mat ResizedTrainedImage = new Mat();
+            //Cv2.Resize(TrainImage, ResizedTrainedImage, NewImageSize);
+
+            // Rect ROI_Char = Rect.FromLTRB(10, 2, 430, 129);
+            Rect ROI_Char = Rect.FromLTRB(10, 2, 430, 68);
+            Rect ROI_Number = Rect.FromLTRB(7, 125, 330, 190);
+
+            Cv2.Rectangle(Display_TrainImage, ROI_Char, new Scalar(0, 0, 255, 255), 2);
+            Cv2.Rectangle(Display_TrainImage, ROI_Number, new Scalar(0, 0, 255, 255), 2);
+
+            Mat CharDomain = new Mat(TrainImage, ROI_Char);
+            Mat NumberDomain = new Mat(TrainImage, ROI_Number);
+
+            SetupResult.ResultOutput.Add(new MatInfo(CharDomain, "", "Char Domain"));
+            SetupResult.ResultOutput.Add(new MatInfo(NumberDomain, "", "Number Domain"));
+
+            Mat ResizedCharDomain = new Mat();
+            //Cv2.Resize(CharDomain, ResizedCharDomain, NewImageSize);
+            Cv2.Resize(CharDomain, ResizedCharDomain, OpenCvSharp.Size.Zero, scale_percent, scale_percent);
+            SetupResult.ResultOutput.Add(new MatInfo(ResizedCharDomain, "", "ResizedChar Domain"));
+
+            Canny = new Mat();
+            Cv2.Canny(ResizedCharDomain, Canny, 0, 100);
+
+            Point[][] contours;
+            HierarchyIndex[] hierarchyIndexes2;
+            Cv2.FindContours(Canny, out contours, out hierarchyIndexes2, mode: RetrievalModes.External,
+                method: ContourApproximationModes.ApproxSimple);
+            var orderedContours = contours.OrderBy(c => Cv2.BoundingRect(c).Y).OrderBy(a => Cv2.BoundingRect(a).X).ToArray();
+            for (int i = 0; i < orderedContours.Length; i++)
+            {
+                if (orderedContours[i].Length > 10)
+                {
+                    var Display_CharDomain = ResizedCharDomain.Clone();
+                    var biggestContourRect = Cv2.BoundingRect(orderedContours[i]);
+                    Cv2.Rectangle(Display_CharDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 1);
+                    SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain, "", "Contour " + i.ToString()));
+
+                    var test = Cv2.Moments(orderedContours[i]).HuMoments();
+                }
+            }
+            //Cv2.MatchShapes()
+            /*Rect ROI_Char = Rect.FromLTRB(10, 2, 430, 129);
             Rect ROI_Number = Rect.FromLTRB(7, 125, 330, 190);
 
             Mat Display_TrainImage = TrainImage.Clone();
-            
+            Mat Display_BrightRefImage = BrightFieldRef.Clone();
 
             Cv2.Rectangle(Display_TrainImage, ROI_Char, new Scalar(0, 0, 255, 255), 2);
             Cv2.Rectangle(Display_TrainImage, ROI_Number, new Scalar(0, 0, 255, 255), 2);
@@ -160,6 +257,11 @@ namespace Base.Vision.Tool
                 method: ContourApproximationModes.ApproxSimple);
 
             var orderedContours = contours.OrderBy(c => Cv2.BoundingRect(c).X).OrderBy(a=>Cv2.BoundingRect(a).Y).ToArray();
+            double RefCharHeight = 0;
+            double RefCharWidth = 0;
+            double RealCharHeight = 0;
+            double RealCharWidth = 0;
+            bool FirstCheck = false;
             for (int i = 0; i < orderedContours.Length; i++)
             {
                 if (orderedContours[i].Length > 7)
@@ -169,10 +271,39 @@ namespace Base.Vision.Tool
                     var biggestContourRect = Cv2.BoundingRect(orderedContours[i]);
                     Cv2.Rectangle(Display_CharDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 2);
                     SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain, "", "Contour " + i.ToString()));
+
+                    if(!FirstCheck)
+                    {
+                        RefCharHeight = biggestContourRect.Height;
+                        RefCharWidth= biggestContourRect.Width;
+                        FirstCheck = true;
+                    }
                 }
 
             }
-           
+
+
+            Rect RealCharROI = Rect.FromLTRB(668, 378, 715, 459);
+
+            Cv2.Rectangle(Display_BrightRefImage, RealCharROI, new Scalar(0, 255, 0, 255), 2);
+            RealCharHeight = RealCharROI.Height; 
+            RealCharWidth = RealCharROI.Width;
+            SetupResult.ResultOutput.Add(new MatInfo(Display_BrightRefImage, "", "Display_BrightRefImage"));
+
+            double ScaleHeight = RealCharHeight / RefCharHeight;
+            double ScaleWidth = RealCharWidth / RefCharWidth;
+            double scale_percent = 0;
+            if (ScaleHeight > ScaleWidth)
+            {
+                scale_percent = ScaleHeight;
+            }
+            else
+                scale_percent = ScaleWidth;
+
+            OpenCvSharp.Size NewImageSize = new OpenCvSharp.Size((TrainImage.Width*scale_percent),(TrainImage.Height*scale_percent));
+
+            Mat ResizedTrainedImage = new Mat();
+            Cv2.Resize(TrainImage, ResizedTrainedImage, NewImageSize);*/
 
             inspectionData = SetupResult;
             return true;     

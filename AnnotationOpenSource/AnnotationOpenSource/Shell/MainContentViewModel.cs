@@ -39,6 +39,7 @@ namespace AnnotationOpenSource.Shell
         }
         bool captured = false;
         public DelegateCommand<Object> ClickProductionCommand { get; set; }
+        public DelegateCommand<Object> ClickTeachCommand { get; set; }
         public DelegateCommand<Object> LeftMouseButtonDown { get; set; }
         public DelegateCommand<Object> LeftMouseButtonUp { get; set; }
         public DelegateCommand<Object> PreviewMouseMove { get; set; }
@@ -49,6 +50,7 @@ namespace AnnotationOpenSource.Shell
         public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService) : base(containerExtension, eventAggregator, regionManager, dialogService)
         {
             ClickProductionCommand = new DelegateCommand<object>(OnClickProductionCommand);
+            ClickTeachCommand = new DelegateCommand<object>(OnTeachCommand);
             LeftMouseButtonDown = new DelegateCommand<object>(OnLeftMouseButtonDown);
             LeftMouseButtonUp = new DelegateCommand<object>(OnLeftMouseButtonUp);
             PreviewMouseMove = new DelegateCommand<object>(OnPreviewMouseMove);
@@ -57,6 +59,11 @@ namespace AnnotationOpenSource.Shell
             Configuration = new OCRShapeMatchConfig();
             OCRTool = new OCRShapeMatchTool(Configuration);
             DisplayCollection = new ObservableCollection<DisplayObject>();
+        }
+
+        private void OnTeachCommand(object obj)
+        {
+            var check = EnableRegionCollection;
         }
 
         private void OnPreviewMouseMove(object obj)
@@ -84,10 +91,13 @@ namespace AnnotationOpenSource.Shell
             if (OCRTool.Setup(out InspectionData test))
             {
                 DisplayCollection.Clear();
+                EnableRegionCollection.Clear();
                 for (int i = 0; i < test.ResultOutput.Count; i++)
                 {
                     DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
                 }
+
+                EnableRegionCollection.Add(new EnableRegionCollector("OCR Rect", new RectItem() { X = 10, Y = 10, Width = 30, Height = 30 }));
             }
         
         }
