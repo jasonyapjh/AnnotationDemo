@@ -139,6 +139,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Framework\MouseBehaviour.cs" />
+    <Compile Include="Framework\ZoomBorder.cs" />
     <Compile Include="Shell\AppBootstrapper.cs" />
     <Compile Include="Shell\MainContent.xaml.cs" />
     <Compile Include="Shell\MainContentViewModel.cs" />

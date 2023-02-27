@@ -102,7 +102,15 @@
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Image Grid.Column="1" Source="{Binding StationAWindow}"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="30"/>
+            </Grid.RowDefinitions>
+            <const:ZoomBorder Grid.Column="1" x:Name="border" ClipToBounds="True" Background="Gray">
+                <Image  Source="{Binding StationAWindow}"/>
+            </const:ZoomBorder>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding OCRResult}"/>
+            <!--Image Grid.Column="1" Source="{Binding StationAWindow}"/-->
             <!--ItemsControl ItemsSource="{Binding RectItems}" Grid.Column="1">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

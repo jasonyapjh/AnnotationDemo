@@ -42,6 +42,7 @@ namespace Base.Vision.Framework
         {
             get; set;
         }
+        public string ResultTuple { get; set; }
        /* public HTuple ResultTuple
         {
             get; set;
