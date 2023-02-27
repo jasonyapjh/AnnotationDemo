@@ -97,6 +97,8 @@ namespace Base.Vision.Tool
         }
         public Point[][] CharContours = new Point[26][];
         public Point[][] NumContours = new Point[10][];
+        public double[][] CharMoments = new double[26][];
+        public double[][] NumMoments = new double[10][];
         public int char_checker = 0;
         public int num_checker = 0;
         public string OcrAvailAlphabet = new string(("ABCDEFGHIJKLMNOPQRSTUVWXYZ").ToArray());
@@ -115,17 +117,60 @@ namespace Base.Vision.Tool
         {
             return (string)OcrAvailAlphabet[i].ToString();
         }
+        public string CompareCharMoment(Point[] contour)
+        {
+            var huMoments = Cv2.Moments(contour).HuMoments();
+            for (int j = 0; j < 7; j++)
+            {
+                huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log(Math.Abs(huMoments[j]));
+            }
+
+            int result = 0;
+            double check = 10000000;
+            double sum = 0;
+            //double sumMoment = huMoments.Sum();
+            for (int i = 0; i < CharMoments.Count(); i++)
+            {
+                sum = 0;
+                for (int j = 0; j < 7; j++)
+                {
+                    sum += Math.Pow((CharMoments[i][j] - huMoments[j]), 2);
+                }
+                sum = Math.Sqrt(sum);
+                if (sum < check)
+                {
+                    result = i;
+                    check = sum;
+                }
+            }
+            return (string)OcrAvailAlphabet[result].ToString();
+
+        }
         public string CompareCharResults(Point[] contour)
         {
             int result = 0;
-            double check = 1000;
+            double check = 1000000;
+            double check2 = 1000000;
             for (int i=0;i<CharContours.Count();i++)
             {
-                double matching = Cv2.MatchShapes(CharContours[i], contour, ShapeMatchModes.I3);
-                if(matching<check)
+             //   double matching = Cv2.MatchShapes(CharContours[i], contour, ShapeMatchModes.I3);
+
+                var area = Cv2.ContourArea(contour);
+                var perimeter = Cv2.ArcLength(contour, true);
+
+                var area_result = ContoursArea[i] - area;
+                var area_perimter = Contourslength[i] - perimeter;
+
+               /* if(matching<check)
                 {
                     result = i;
                     check = matching;
+                }*/
+               if ((area_result < check) && (area_perimter < check2))
+                {
+                    result = i;
+                    check = area_result;
+                    check2 = area_perimter;
                 }
             }
             return (string)OcrAvailAlphabet[result].ToString();
@@ -278,15 +323,18 @@ namespace Base.Vision.Tool
             Cv2.FindContours(Canny, out contours2, out hierarchyIndexes3, mode: RetrievalModes.External,
                 method: ContourApproximationModes.ApproxSimple);
             var orderedContours2 = contours2.OrderBy(c => Cv2.BoundingRect(c).Y).OrderBy(a => Cv2.BoundingRect(a).X).ToArray();
-
             string CharFormat = new string(config.OcrFormat.ToArray());
+            /*  var Display_CharDomain2 = Morphed_Char.Clone();
+              Cv2.DrawContours(Display_CharDomain2, orderedContours2, -1, new Scalar(0, 0, 255, 255), -1);
+              SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain2, "", "Display_CharDomain2"));*/
+
 
             int foundFormat = 0;
-            string OutputChar = "";
+              string OutputChar = "";
             for (int i = 0; i < orderedContours2.Length; i++)
             {
                 var biggestContourRect = Cv2.BoundingRect(orderedContours2[i]);
-                if (biggestContourRect.Height > RealCharHeight-50 && biggestContourRect.Width > RealCharWidth-50)
+                if (biggestContourRect.Height > RealCharHeight - 50 && biggestContourRect.Width > RealCharWidth - 50)
                 {
                     var Display_CharDomain = Morphed_Char.Clone();
                     //var biggestContourRect = Cv2.BoundingRect(orderedContours2[i]);
@@ -299,24 +347,28 @@ namespace Base.Vision.Tool
 
                         if (CharFormat[foundFormat] == 'A')
                         {
+                            //OutputString = OutputString + CompareCharMoment(orderedContours2[i]);
                             OutputString = OutputString + CompareCharResults(orderedContours2[i]);
-                           // var results = CompareCharResults(orderedContours2[i]);
+                            // var results = CompareCharResults(orderedContours2[i]);
                         }
                         else
                         {
                             OutputString = OutputString + CompareNumResults(orderedContours2[i]);
-                           // var resilts = CompareNumResults(orderedContours2[i]);
+                            // var resilts = CompareNumResults(orderedContours2[i]);
                         }
                         foundFormat++;
                     }
                     //OutputString = OutputString + OutputChar;
                 }
             }
+
             SetupResult.ResultTuple = OutputString;
            
             inspectionData = SetupResult;
             return true;     
         }
+        public List<double> ContoursArea = new List<double>();
+        public List<double> Contourslength = new List<double>();
         public void FindCharContours(Mat image, Mat Canny, InspectionData SetupResult, int length)
         {
             Point[][] contours;
@@ -330,12 +382,24 @@ namespace Base.Vision.Tool
                 if (orderedContours[i].Length > length)
                 {
                     CharContours[char_checker] = orderedContours[i];
-                    char_checker++;
+                   
                     var Display_CharDomain = image.Clone();
                     var biggestContourRect = Cv2.BoundingRect(orderedContours[i]);
                     Cv2.Rectangle(Display_CharDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 1);
                     SetupResult.ResultOutput.Add(new MatInfo(Display_CharDomain, "", "Contour " + i.ToString()));
 
+                    ContoursArea.Add(Cv2.ContourArea(orderedContours[i]));
+                    Contourslength.Add(Cv2.ArcLength(orderedContours[i], true));
+                    // Get HuMoments
+                   // double[7] huMoments = Cv2.Moments(orderedContours[i]).HuMoments();
+                    var huMoments = Cv2.Moments(orderedContours[i]).HuMoments();
+                    for (int j = 0; j < 7; j++)
+                    {
+                        huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log(Math.Abs(huMoments[j]));
+                    }
+                    CharMoments[char_checker] = huMoments;
+                    //CharMoments[char_checker] = Cv2.Moments(orderedContours[i]).HuMoments();
+                    char_checker++;
                 }
             }
         }
@@ -352,11 +416,16 @@ namespace Base.Vision.Tool
                 if (orderedContours[i].Length > length)
                 {
                     NumContours[num_checker] = orderedContours[i];
-                    num_checker++;
+             
                     var Display_NumDomain = image.Clone();
                     var biggestContourRect = Cv2.BoundingRect(orderedContours[i]);
                     Cv2.Rectangle(Display_NumDomain, biggestContourRect, new Scalar(0, 0, 255, 255), 1);
                     SetupResult.ResultOutput.Add(new MatInfo(Display_NumDomain, "", "Num Contour " + i.ToString()));
+
+
+                    // Get HuMoments
+                    NumMoments[num_checker] = Cv2.Moments(orderedContours[i]).HuMoments();
+                    num_checker++;
 
                 }
             }
