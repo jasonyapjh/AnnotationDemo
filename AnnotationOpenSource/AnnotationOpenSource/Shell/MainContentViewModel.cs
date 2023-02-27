@@ -38,6 +38,12 @@ namespace AnnotationOpenSource.Shell
             set { SetProperty(ref _configuration, value); }
         }
         bool captured = false;
+        private string _ocrResult;
+        public string OCRResult
+        {
+            get { return _ocrResult; }
+            set { SetProperty(ref _ocrResult, value); }
+        }
         public DelegateCommand<Object> ClickProductionCommand { get; set; }
         public DelegateCommand<Object> ClickTeachCommand { get; set; }
         public DelegateCommand<Object> LeftMouseButtonDown { get; set; }
@@ -96,7 +102,7 @@ namespace AnnotationOpenSource.Shell
                 {
                     DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
                 }
-
+                OCRResult = test.ResultTuple;
                 EnableRegionCollection.Add(new EnableRegionCollector("OCR Rect", new RectItem() { X = 10, Y = 10, Width = 30, Height = 30 }));
             }
         
