@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Const.cs" />
+    <Compile Include="Framework\ArrayComparer.cs" />
     <Compile Include="Framework\DisplayObject.cs" />
     <Compile Include="Framework\InspectionData.cs" />
     <Compile Include="OCRShapeMatchTool.cs" />
