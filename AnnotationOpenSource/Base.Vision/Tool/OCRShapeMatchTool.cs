@@ -120,9 +120,10 @@ namespace Base.Vision.Tool
         public string CompareCharMoment(Point[] contour)
         {
             var huMoments = Cv2.Moments(contour).HuMoments();
+
             for (int j = 0; j < 7; j++)
             {
-                huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log(Math.Abs(huMoments[j]));
+                huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log10(Math.Abs(huMoments[j]));
             }
 
             int result = 0;
@@ -132,7 +133,7 @@ namespace Base.Vision.Tool
             for (int i = 0; i < CharMoments.Count(); i++)
             {
                 sum = 0;
-                for (int j = 0; j < 7; j++)
+                for (int j = 0; j < 6; j++)
                 {
                     sum += Math.Pow((CharMoments[i][j] - huMoments[j]), 2);
                 }
@@ -146,31 +147,76 @@ namespace Base.Vision.Tool
             return (string)OcrAvailAlphabet[result].ToString();
 
         }
+        public string CompareNumMoment(Point[] contour)
+        {
+            var huMoments = Cv2.Moments(contour).HuMoments();
+            for (int j = 0; j < 7; j++)
+            {
+                huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log10(Math.Abs(huMoments[j]));
+            }
+
+            int result = 0;
+            double check = 10000000;
+            double sum = 0;
+            List<double> EachSum = new List<double>();
+            //double sumMoment = huMoments.Sum();
+            for (int i = 0; i < NumMoments.Count(); i++)
+            {
+                sum = 0;
+                for (int j = 0; j < 7; j++)
+                {
+                    sum += Math.Pow((NumMoments[i][j] - huMoments[j]), 2);
+                }
+                sum = Math.Sqrt(sum);
+                EachSum.Add(sum);
+                if (sum < check)
+                {
+                    result = i;
+                    check = sum;
+                }
+            }
+
+            return (string)OcrAvailNumber[result].ToString();
+
+        }
         public string CompareCharResults(Point[] contour)
         {
             int result = 0;
             double check = 1000000;
             double check2 = 1000000;
+            double check3 = 100000;
             for (int i=0;i<CharContours.Count();i++)
             {
-             //   double matching = Cv2.MatchShapes(CharContours[i], contour, ShapeMatchModes.I3);
+                double matching = Cv2.MatchShapes(CharContours[i], contour, ShapeMatchModes.I3);
 
                 var area = Cv2.ContourArea(contour);
                 var perimeter = Cv2.ArcLength(contour, true);
 
                 var area_result = ContoursArea[i] - area;
-                var area_perimter = Contourslength[i] - perimeter;
-
-               /* if(matching<check)
+                //var area_perimter = Contourslength[i] - perimeter;
+                //var area_perimter = 10.0;
+                if (matching < check3)
                 {
-                    result = i;
-                    check = matching;
-                }*/
-               if ((area_result < check) && (area_perimter < check2))
-                {
-                    result = i;
-                    check = area_result;
-                    check2 = area_perimter;
+                    //result = i;
+                    check3 = matching;
+                    if (area_result > 0)
+                    {
+                        if ((area_result < check))
+                        {
+                            result = i;
+                            check = area_result;
+   
+                        }
+                    }
+                    /* if (area_result > 0 && area_perimter > 0)
+                     {
+                         if ((area_result < check) && (area_perimter < check2))
+                         {
+                             result = i;
+                             check = area_result;
+                             check2 = area_perimter;
+                         }
+                     }*/
                 }
             }
             return (string)OcrAvailAlphabet[result].ToString();
@@ -347,13 +393,14 @@ namespace Base.Vision.Tool
 
                         if (CharFormat[foundFormat] == 'A')
                         {
-                            //OutputString = OutputString + CompareCharMoment(orderedContours2[i]);
-                            OutputString = OutputString + CompareCharResults(orderedContours2[i]);
+                            OutputString = OutputString + CompareCharMoment(orderedContours2[i]);
+                            //OutputString = OutputString + CompareCharResults(orderedContours2[i]);
                             // var results = CompareCharResults(orderedContours2[i]);
                         }
                         else
                         {
-                            OutputString = OutputString + CompareNumResults(orderedContours2[i]);
+                            OutputString = OutputString + CompareNumMoment(orderedContours2[i]);
+                            //OutputString = OutputString + CompareNumResults(orderedContours2[i]);
                             // var resilts = CompareNumResults(orderedContours2[i]);
                         }
                         foundFormat++;
@@ -369,6 +416,7 @@ namespace Base.Vision.Tool
         }
         public List<double> ContoursArea = new List<double>();
         public List<double> Contourslength = new List<double>();
+        public List<double> CharDistance = new List<double>();
         public void FindCharContours(Mat image, Mat Canny, InspectionData SetupResult, int length)
         {
             Point[][] contours;
@@ -395,13 +443,33 @@ namespace Base.Vision.Tool
                     var huMoments = Cv2.Moments(orderedContours[i]).HuMoments();
                     for (int j = 0; j < 7; j++)
                     {
-                        huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log(Math.Abs(huMoments[j]));
+                        huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log10(Math.Abs(huMoments[j]));
                     }
+
+                    double h0 = 0.00162663;
+                    double h1 = -1 * Math.Sign(h0) * Math.Log10(Math.Abs(h0));
                     CharMoments[char_checker] = huMoments;
                     //CharMoments[char_checker] = Cv2.Moments(orderedContours[i]).HuMoments();
                     char_checker++;
+                   /* double sumCharDistance = 0;
+                    for(int j = 1; j < orderedContours[i].Length; j++)
+                    {
+
+                        Point p1 = orderedContours[i][j-1];
+                        Point p2 = orderedContours[i][j];
+                        //  CharDistance = +GetDistance(p1.X, p1.Y, p2.X, p2.Y);
+                        sumCharDistance = + Math.Sqrt(Math.Pow((p1.X - p2.X), 2) + Math.Pow((p1.Y - p2.Y),2));
+
+                    }
+                    CharDistance.Add(sumCharDistance);*/
+
                 }
+                
             }
+        }
+        private static double GetDistance(double x1, double y1, double x2, double y2)
+        {
+            return Math.Sqrt(Math.Pow((x2 - x1), 2) + Math.Pow((y2 - y1), 2));
         }
         public void FindNumContours(Mat image, Mat Canny, InspectionData SetupResult, int length)
         {
@@ -424,7 +492,13 @@ namespace Base.Vision.Tool
 
 
                     // Get HuMoments
-                    NumMoments[num_checker] = Cv2.Moments(orderedContours[i]).HuMoments();
+                    var huMoments = Cv2.Moments(orderedContours[i]).HuMoments();
+                    for (int j = 0; j < 7; j++)
+                    {
+                        huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log10(Math.Abs(huMoments[j]));
+                    }
+
+                    NumMoments[num_checker] = huMoments;
                     num_checker++;
 
                 }
