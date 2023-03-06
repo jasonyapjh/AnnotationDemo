@@ -20,6 +20,7 @@ using System.Windows.Media.Media3D;
 using System.Collections;
 using System.Windows.Media.Animation;
 using System.Windows.Media;
+using OpenCvSharp.ML;
 
 namespace Base.Vision.Tool
 {
@@ -409,6 +410,7 @@ namespace Base.Vision.Tool
             int foundFormat = 0;
             string OutputChar = "";
             int hullmomentCount = 0;
+            List<double> TestMomentsValue = new List<double>();
             for (int i = 0; i < orderedContours2.Length; i++)
             {
                 var biggestContourRect = Cv2.BoundingRect(orderedContours2[i]);
@@ -442,18 +444,18 @@ namespace Base.Vision.Tool
 
                     Cv2.Resize(roi, resizedImage, ResizeFormat); //resize to 10X10
 
-               //     kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new OpenCvSharp.Size(5, 5));
+                    //     kernel = Cv2.GetStructuringElement(MorphShapes.Ellipse, new OpenCvSharp.Size(5, 5));
                     // Mat Morphed_Char_2 = thres.MorphologyEx(MorphTypes.Open, kernel);
-               //     Mat Morphed_Char_2 = resizedImage.MorphologyEx(MorphTypes.Open, kernel,null,3);
-                    
-               //     Mat Canny2 = new Mat();
-               //     Cv2.Canny(Morphed_Char_2, Canny2, 0, 100);
+                    //     Mat Morphed_Char_2 = resizedImage.MorphologyEx(MorphTypes.Open, kernel,null,3);
 
-                //     Mat thres = new Mat();
-                //     Cv2.Threshold(Canny2, thres, 0, 100, ThresholdTypes.Binary);
+                    //     Mat Canny2 = new Mat();
+                    //     Cv2.Canny(Morphed_Char_2, Canny2, 0, 100);
+
+                    //     Mat thres = new Mat();
+                    //     Cv2.Threshold(Canny2, thres, 0, 100, ThresholdTypes.Binary);
 
 
-
+                    double[] huMoments = new double[7];
                     SetupResult.ResultOutput.Add(new MatInfo(resizedImage, "", "ROI_2 " + i.ToString()));
 
                     // for (int j = 0; j < CharacterContours.Length; j++)
@@ -464,6 +466,19 @@ namespace Base.Vision.Tool
                         HullValue.Add(hull[hullmomentCount].Count());
                         hullmomentCount++;
                     }
+                    huMoments = Cv2.Moments(orderedContours2[i]).HuMoments();
+                    double sum = 0;
+                    for (int j = 0; j < 7; j++)
+                    {
+                        huMoments[j] = -1 * Math.Sign(huMoments[j]) * Math.Log10(Math.Abs(huMoments[j]));
+                    }
+                    for (int j = 0; j < 4; j++)
+                    {
+
+                        sum += huMoments[j];
+                    }
+                    TestMomentsValue.Add(sum);
+
                     //}
 
                     //  for (int j = 0; j < hull.Length; j++)
