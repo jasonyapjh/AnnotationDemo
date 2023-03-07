@@ -9,7 +9,7 @@
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:MB="clr-namespace:AnnotationOpenSource.Framework"
              xmlns:const="clr-namespace:AnnotationOpenSource.Framework"
-             xmlns:xceed="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:xceed="http://schemas.xceed.com/wpf/xaml/toolkit" d:DataContext="{d:DesignInstance Type=local:MainContentViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -85,6 +85,36 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+            <ControlTemplate x:Key="MoveThumbTemplate" TargetType="{x:Type MB:MoveThumb}">
+                <Rectangle Fill="Transparent"/>
+            </ControlTemplate>
+            <ControlTemplate x:Key="ResizeDecoratorTemplate" TargetType="{x:Type Control}">
+                <Grid>
+                    <MB:ResizeThumb Height="3" Cursor="SizeNS" Margin="0 -4 0 0"
+                       VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+                    <MB:ResizeThumb Width="3" Cursor="SizeWE" Margin="-4 0 0 0"
+                       VerticalAlignment="Stretch" HorizontalAlignment="Left"/>
+                    <MB:ResizeThumb Width="3" Cursor="SizeWE" Margin="0 0 -4 0"
+                       VerticalAlignment="Stretch" HorizontalAlignment="Right"/>
+                    <MB:ResizeThumb Height="3" Cursor="SizeNS" Margin="0 0 0 -4"
+                       VerticalAlignment="Bottom" HorizontalAlignment="Stretch"/>
+                    <MB:ResizeThumb Width="7" Height="7" Cursor="SizeNWSE" Margin="-6 -6 0 0"
+                       VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                    <MB:ResizeThumb Width="7" Height="7" Cursor="SizeNESW" Margin="0 -6 -6 0"
+                       VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                    <MB:ResizeThumb Width="7" Height="7" Cursor="SizeNESW" Margin="-6 0 0 -6"
+                       VerticalAlignment="Bottom" HorizontalAlignment="Left"/>
+                    <MB:ResizeThumb Width="7" Height="7" Cursor="SizeNWSE" Margin="0 0 -6 -6"
+                       VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+                </Grid>
+            </ControlTemplate>
+            <ControlTemplate x:Key="DesignerItemTemplate" TargetType="ContentControl">
+                <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                    <MB:MoveThumb Template="{StaticResource MoveThumbTemplate}" Cursor="SizeAll"/>
+                    <Control Template="{StaticResource ResizeDecoratorTemplate}"/>
+                    <ContentPresenter Content="{TemplateBinding ContentControl.Content}"/>
+                </Grid>
+            </ControlTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -107,7 +137,7 @@
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
             <const:ZoomBorder Grid.Column="1" x:Name="border" ClipToBounds="True" Background="Gray">
-                <Image  Source="{Binding StationAWindow}"/>
+                <Image Name="ImageBorder"  Source="{Binding StationAWindow}" UseLayoutRounding="True" SnapsToDevicePixels="True" VerticalAlignment="Top" Width="500" Height="400"/>
             </const:ZoomBorder>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding OCRResult}"/>
             <!--Image Grid.Column="1" Source="{Binding StationAWindow}"/-->
@@ -131,16 +161,37 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl-->
-            <Canvas Grid.Column="1" x:Name="LayoutRoot">
-
-                <i:Interaction.Behaviors>
-                    <MB:MouseBehaviour 
+            <Canvas Grid.Column="1">
+                <ContentControl   Width="{Binding RectWidth, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Height="{Binding RectHeight, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                   Canvas.Left="{Binding RectX, Mode=TwoWay}"
+                    Canvas.Top="{Binding RectY, Mode=TwoWay}"
+                    Template="{StaticResource DesignerItemTemplate}">
+                    <Rectangle Fill="Red" IsHitTestVisible="False" Opacity="0.1"/>
+                </ContentControl>
+            </Canvas>
+            <!--ContentControl Width="130"
+                    MinWidth="50"
+                    Height="130"
+                    MinHeight="50"
+                    Canvas.Top="150"
+                    Canvas.Left="150"
+                    Template="{StaticResource DesignerItemTemplate}">
+                    <Path Fill="Blue"
+            Data="M 0,5 5,0 10,5 5,10 Z"
+            Stretch="Fill"
+            IsHitTestVisible="False"/>
+                </ContentControl>
+            </Canvas-->
+            <!--Canvas Grid.Column="1" x:Name="LayoutRoot">
+               
+                    <i:Interaction.Behaviors>
+                        <MB:MouseBehaviour 
                         MouseX="{Binding PanelX, Mode=TwoWay}"
                         MouseY="{Binding PanelY, Mode=TwoWay}"
                         />
-                </i:Interaction.Behaviors>
+                    </i:Interaction.Behaviors>
 
-                <Rectangle 
+                    <Rectangle 
                     x:Name="testSquare"
                     Fill="Transparent" Height="{Binding RectHeight}"
                     Stroke="Black"
@@ -150,28 +201,29 @@
                     Canvas.Left="{Binding RectX, Mode=TwoWay}"
                     Canvas.Top="{Binding RectY, Mode=TwoWay}"  >
 
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="PreviewMouseDown" >
-                            <i:InvokeCommandAction 
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="PreviewMouseDown" >
+                                <i:InvokeCommandAction 
                                 Command="{Binding ElementName=testSquare, Path=DataContext.LeftMouseButtonDown}"
                                 CommandParameter="{Binding}" />
-                        </i:EventTrigger>
+                            </i:EventTrigger>
 
-                        <i:EventTrigger EventName="PreviewMouseUp" >
-                            <i:InvokeCommandAction 
+                            <i:EventTrigger EventName="PreviewMouseUp" >
+                                <i:InvokeCommandAction 
                                 Command="{Binding ElementName=testSquare, Path=DataContext.LeftMouseButtonUp}"
                                 CommandParameter="{Binding}" />
-                        </i:EventTrigger>
+                            </i:EventTrigger>
 
-                        <i:EventTrigger EventName="PreviewMouseMove" >
-                            <i:InvokeCommandAction 
+                            <i:EventTrigger EventName="PreviewMouseMove" >
+                                <i:InvokeCommandAction 
                                 Command="{Binding ElementName=testSquare, Path=DataContext.PreviewMouseMove}"
                                 CommandParameter="{Binding}" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
 
-                </Rectangle>
-            </Canvas>
+                    </Rectangle>
+             
+            </Canvas-->
             <Grid Grid.Column="2">
                 <TabControl>
                     <TabItem Header="Run">
@@ -182,10 +234,14 @@
                             </Grid.RowDefinitions>
                             <Grid Grid.Row="0">
                                 <DataGrid AutoGenerateColumns="False" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" CanUserAddRows="False" ItemsSource="{Binding EnableRegionCollection}" 
-                                          CanUserResizeRows="True" AreRowDetailsFrozen="True" HeadersVisibility="All" SelectedItem="{Binding SelectedRegion}"
+                                          CanUserResizeRows="True" AreRowDetailsFrozen="True" HeadersVisibility="All" SelectedIndex="{Binding SelectedRegionIndex}" SelectedItem="{Binding SelectedRegion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           FontSize="18" FontFamily="Sora Regular" Padding="-1" VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Shape" Binding="{Binding Path=Key}"/>
+                                        <DataGridTextColumn Header="X" Binding="{Binding Path=X}"/>
+                                        <DataGridTextColumn Header="Y" Binding="{Binding Path=Y}"/>
+                                        <DataGridTextColumn Header="Height" Binding="{Binding Path=Height}"/>
+                                        <DataGridTextColumn Header="Widht" Binding="{Binding Path=Width}"/>
                                         <!--DataGridCheckBoxColumn Header="Enable" Binding="{Binding Enable, UpdateSourceTrigger=PropertyChanged}">
                                             <DataGridCheckBoxColumn.ElementStyle>
                                                 <Style TargetType="CheckBox">
@@ -243,7 +299,8 @@
             </Button>
             <Button Grid.Column="2" Content="Test2" Foreground="Black" Command="{Binding ClickTeachCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}">
             </Button>
-
+            <Button Grid.Column="4" Content="Test3" Foreground="Black" Command="{Binding ClickRunCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}">
+            </Button>
         </Grid>
     </Grid>
 </UserControl>

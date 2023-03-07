@@ -25,6 +25,9 @@ using Base.Vision.Framework;
 using static System.Net.Mime.MediaTypeNames;
 using System.Windows;
 using Rect = OpenCvSharp.Rect;
+using System.Xml.Linq;
+using static AnnotationOpenSource.Shell.MainContentViewModel;
+using Image = System.Windows.Controls.Image;
 
 namespace AnnotationOpenSource.Shell
 {
@@ -49,6 +52,7 @@ namespace AnnotationOpenSource.Shell
         public DelegateCommand<Object> LeftMouseButtonDown { get; set; }
         public DelegateCommand<Object> LeftMouseButtonUp { get; set; }
         public DelegateCommand<Object> PreviewMouseMove { get; set; }
+        public DelegateCommand<object> ClickRunCommand { get; set; }
         public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
         public ObservableCollection<DisplayObject> DisplayCollection { get; private set; }
 
@@ -60,16 +64,42 @@ namespace AnnotationOpenSource.Shell
             LeftMouseButtonDown = new DelegateCommand<object>(OnLeftMouseButtonDown);
             LeftMouseButtonUp = new DelegateCommand<object>(OnLeftMouseButtonUp);
             PreviewMouseMove = new DelegateCommand<object>(OnPreviewMouseMove);
+            ClickRunCommand = new DelegateCommand<object>(OnClickRunCommand);
             Configuration = new OCRShapeMatchConfig();
             EnableRegionCollection = new ObservableCollection<EnableRegionCollector>();
             Configuration = new OCRShapeMatchConfig();
             OCRTool = new OCRShapeMatchTool(Configuration);
             DisplayCollection = new ObservableCollection<DisplayObject>();
+            //ImageBorder = new Image();
+        }
+
+        private void OnClickRunCommand(object obj)
+        {
+            EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(10, 10, 30, 30, "C")));
+            EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(20, 60, 50, 50, "A")));
         }
 
         private void OnTeachCommand(object obj)
         {
-            var check = EnableRegionCollection;
+            EnableRegionCollection.Clear();
+            var str = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\System Setting\BrightFieldRef.jpg";
+            Mat image = new Mat(str);
+            if (OCRTool.Run(image, out InspectionData test))
+            {
+                DisplayCollection.Clear();
+                //EnableRegionCollection.Clear();
+                for (int i = 0; i < test.ResultOutput.Count; i++)
+                {
+                    DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
+                }
+                OCRResult = test.ResultTuple;
+                foreach(var item in test.ResultOutputRect)
+                {
+                    EnableRegionCollection.Add(new EnableRegionCollector(item));
+                }
+                //EnableRegionCollection = test.ResultOutputRect;
+            }
+
         }
 
         private void OnPreviewMouseMove(object obj)
@@ -103,57 +133,95 @@ namespace AnnotationOpenSource.Shell
                     DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
                 }
                 OCRResult = test.ResultTuple;
-                EnableRegionCollection.Add(new EnableRegionCollector("OCR Rect", new RectItem() { X = 10, Y = 10, Width = 30, Height = 30 }));
+                //EnableRegionCollection.Add(new EnableRegionCollector("OCR Rect", new RectItem() { X = 10, Y = 10, Width = 30, Height = 30 }));
             }
         
         }
 
-        public class RectItem
+       /* public class RectItem
         {
             public double X { get; set; }
             public double Y { get; set; }
             public double Width { get; set; }
             public double Height { get; set; }
-        }
+        }*/
         #region EnableRegion
         public class EnableRegionCollector : BindableBase
         {
             private string m_ShapeName;
-            private RectItem m_rect;
+            private RectInfo m_rect;
+            private double m_X;
+            private double m_Y;
+            private double m_Width;
+            private double m_Height;
             public string Key
             {
                 get { return this.m_ShapeName; }
                 set { SetProperty(ref m_ShapeName, value); }
             }
-            public RectItem Shape
+            
+            public RectInfo Shape
             {
                 get { return this.m_rect; }
                 set
                 {
                     SetProperty(ref m_rect, value);
+                    X = value.TLX;
+                    Y = value.TLY;
+                    Width = value.Width;
+                    Height = value.Height;
+                    Key = Shape.Char;
                 }
             }
-
-            public EnableRegionCollector(string name, RectItem enable)
+            public double X
             {
-                Key = name;
+                get { return this.m_X; }
+                set { SetProperty(ref m_X, value); }
+            }
+            public double Y
+            {
+                get { return this.m_Y; }
+                set { SetProperty(ref m_Y, value); }
+            }
+            public double Width
+            {
+                get { return this.m_Width; }
+                set { SetProperty(ref m_Width, value); }
+            }
+            public double Height
+            {
+                get { return this.m_Height; }
+                set { SetProperty(ref m_Height, value); }
+            }
+            public EnableRegionCollector(RectInfo enable)
+            {
                 Shape = enable;
             }
+        
         }
         private EnableRegionCollector m_EnabledShape;
         public EnableRegionCollector SelectedRegion
         {
             get { return this.m_EnabledShape; }
             set 
-            { 
-                SetProperty(ref m_EnabledShape, value);
-                RectWidth = value.Shape.Width;
-                RectHeight = value.Shape.Height;
-                PanelX = RectWidth;
-                PanelY = RectHeight;
-                RectX = value.Shape.X;
-                RectY = value.Shape.Y;
+            {
+                if (value != null)
+                {
+                    SetProperty(ref m_EnabledShape, value);
+                    RectWidth = value.Shape.Width;
+                    RectHeight = value.Shape.Height;
+                    PanelX = RectWidth;
+                    PanelY = RectHeight;
+                    RectX = value.Shape.TLX;
+                    RectY = value.Shape.TLY;
+                }
             }
+        }
+        private int m_SelectedRegionIndex;
+        public int SelectedRegionIndex
+        {
+            get { return this.m_SelectedRegionIndex; }
+            set { SetProperty(ref m_SelectedRegionIndex, value); }
         }
         #endregion
         public override bool IsNavigationTarget(NavigationContext navigationContext)
@@ -190,12 +258,24 @@ namespace AnnotationOpenSource.Shell
             }
         }
         #endregion
+
         private BitmapSource _stationAWindow;
 
         public BitmapSource StationAWindow
         {
             get { return _stationAWindow; }
-            set { SetProperty(ref this._stationAWindow, value); }
+            set 
+            { 
+                if (value != null)
+                {
+                    var width = value.Width;
+                    var height = value.Height;
+                    var test = ActualWidth;
+                    //OpenCV.ResizeImageToHWindow(ImageBorder, width, height);
+                    //var test = ImageBorder.Width;
+                }
+                SetProperty(ref this._stationAWindow, value); 
+            }
         }
         private double _panelX;
         private double _panelY;
@@ -203,7 +283,14 @@ namespace AnnotationOpenSource.Shell
         private double _rectY;
         private double _rectWidth;
         private double _rectHeight;
-
+        private double VerticalRes;
+        private double HorizontalRes;
+        private double m_ActualWidth;
+        public double ActualWidth
+        {
+            get { return m_ActualWidth; }
+            set { SetProperty(ref this.m_ActualWidth, value); }
+        }
         public double RectWidth
         {
             get { return _rectWidth; }
@@ -211,6 +298,11 @@ namespace AnnotationOpenSource.Shell
             {
                 if (value.Equals(_rectWidth)) return;
                 SetProperty(ref this._rectWidth, value);
+                if(SelectedRegion!=null)
+                {
+                    SelectedRegion.Width = value;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.Width= value;
+                }
             }
         }
         public double RectHeight
@@ -220,6 +312,11 @@ namespace AnnotationOpenSource.Shell
             {
                 if (value.Equals(_rectHeight)) return;
                 SetProperty(ref this._rectHeight, value);
+                if (SelectedRegion != null)
+                {
+                    SelectedRegion.Height = value;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.Height = value;
+                }
             }
         }
         public double RectX
@@ -229,6 +326,11 @@ namespace AnnotationOpenSource.Shell
             {
                 if (value.Equals(_rectX)) return;
                 SetProperty(ref this._rectX, value);
+                if (SelectedRegion != null)
+                {
+                    SelectedRegion.X = value;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.TLX = value;
+                }
             }
         }
 
@@ -239,6 +341,11 @@ namespace AnnotationOpenSource.Shell
             {
                 if (value.Equals(_rectY)) return;
                 SetProperty(ref this._rectY, value);
+                if (SelectedRegion != null)
+                {
+                    SelectedRegion.Y = value;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.TLY = value;
+                }
             }
         }
 

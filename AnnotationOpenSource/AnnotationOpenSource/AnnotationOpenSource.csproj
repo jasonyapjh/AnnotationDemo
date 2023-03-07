@@ -138,7 +138,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Framework\ImageBorder.cs" />
     <Compile Include="Framework\MouseBehaviour.cs" />
+    <Compile Include="Framework\MoveThumb.cs" />
+    <Compile Include="Framework\ResizeThumb.cs" />
     <Compile Include="Framework\ZoomBorder.cs" />
     <Compile Include="Shell\AppBootstrapper.cs" />
     <Compile Include="Shell\MainContent.xaml.cs" />
