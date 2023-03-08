@@ -28,6 +28,12 @@ using Rect = OpenCvSharp.Rect;
 using System.Xml.Linq;
 using static AnnotationOpenSource.Shell.MainContentViewModel;
 using Image = System.Windows.Controls.Image;
+using System.Windows.Forms;
+using static System.Windows.Forms.ImageList;
+using System.Linq;
+using System.Windows.Shapes;
+using Base.Common;
+using System.Xml;
 
 namespace AnnotationOpenSource.Shell
 {
@@ -53,10 +59,21 @@ namespace AnnotationOpenSource.Shell
         public DelegateCommand<Object> LeftMouseButtonUp { get; set; }
         public DelegateCommand<Object> PreviewMouseMove { get; set; }
         public DelegateCommand<object> ClickRunCommand { get; set; }
+        public DelegateCommand<object> ClickNextBoxCommand { get; set; }
+        public DelegateCommand<object> ClickFileCommand { get; set; }
+        public DelegateCommand<object> ClickCreateAnnotationCommand { get; set; }
+        public DelegateCommand<object> ClickNewBoxCommand { get; set; }
+        public DelegateCommand<object> ClickDeleteBoxCommand { get; set; }
         public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
         public ObservableCollection<DisplayObject> DisplayCollection { get; private set; }
+        public ObservableCollection<string> CharBox { get; private set; }
+        public ObservableCollection<string> NumberBox { get; private set; }
+        public ObservableCollection<FileCollector> FileBox { get; private set; }
 
         public OCRShapeMatchTool OCRTool;
+        private int CharCount = 0;
+
+        private string FileDirectory = "";
         public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService) : base(containerExtension, eventAggregator, regionManager, dialogService)
         {
             ClickProductionCommand = new DelegateCommand<object>(OnClickProductionCommand);
@@ -65,26 +82,268 @@ namespace AnnotationOpenSource.Shell
             LeftMouseButtonUp = new DelegateCommand<object>(OnLeftMouseButtonUp);
             PreviewMouseMove = new DelegateCommand<object>(OnPreviewMouseMove);
             ClickRunCommand = new DelegateCommand<object>(OnClickRunCommand);
+            ClickNextBoxCommand = new DelegateCommand<object>(OnNextBox);
+            ClickFileCommand = new DelegateCommand<object>(OnOpenFile);
+            ClickCreateAnnotationCommand = new DelegateCommand<object>(OnCreateAnnotations);
+            ClickNewBoxCommand = new DelegateCommand<object>(OnAddNewBox);
+            ClickDeleteBoxCommand = new DelegateCommand<object>(OnDeleteBox);
             Configuration = new OCRShapeMatchConfig();
             EnableRegionCollection = new ObservableCollection<EnableRegionCollector>();
             Configuration = new OCRShapeMatchConfig();
             OCRTool = new OCRShapeMatchTool(Configuration);
             DisplayCollection = new ObservableCollection<DisplayObject>();
+            FileBox = new ObservableCollection<FileCollector>();
+          /*  FileBox.Add(new FileCollector("test") { Done = true });
+            FileBox.Add(new FileCollector("test1") { Done = false });
+            FileBox.Add(new FileCollector("test2") { Done = true });*/
+            CharBox = new ObservableCollection<string>() { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J","K", "L", "M","N", "O","P","Q","R","S", "T","U","V","W","X","Y","Z" };
+            NumberBox = new ObservableCollection<string>() { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
             //ImageBorder = new Image();
+            IsTrain = true;
         }
 
+        private void OnDeleteBox(object obj)
+        {
+            EnableRegionCollection.RemoveAt(SelectedRegionIndex);
+        }
+
+        private void OnAddNewBox(object obj)
+        {
+            EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(40, 40, 40, 40, "A")));
+        }
+
+        private void OnCreateAnnotations(object obj)
+        {
+            FileDirectory = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
+            var sts = new XmlWriterSettings()
+            {
+                Indent = true,
+                //ConformanceLevel = ConformanceLevel.Fragment,
+                OmitXmlDeclaration = true,
+            };
+
+            XmlWriter writer = XmlWriter.Create(FileDirectory, sts);
+            writer.WriteStartDocument();
+
+            // Start -> annotation
+            writer.WriteStartElement("annotation");
+
+            // Start --> folder
+            writer.WriteStartElement("folder");
+            writer.WriteString(TrainMode);
+            writer.WriteEndElement();
+            // End --> folder
+            // Start --> filename
+            writer.WriteStartElement("filename");
+            writer.WriteString(System.IO.Path.GetFileName(SelectedFile.FileName));
+            writer.WriteEndElement();
+            // End --> filename
+            // Start --> path
+            writer.WriteStartElement("path");
+            writer.WriteString(SelectedFile.FileName);
+            writer.WriteEndElement();
+            // End --> path
+            // Start --> source ---> database
+            writer.WriteStartElement("source");
+            writer.WriteStartElement("database");
+            writer.WriteString("Unknown");
+            writer.WriteEndElement();
+            writer.WriteEndElement();
+            // End --> source
+            // Start --> size
+            writer.WriteStartElement("size");
+            // Start --> width
+            writer.WriteStartElement("width");
+            writer.WriteValue(Images.Width);
+            writer.WriteEndElement();
+            // End --> width
+            // Start --> height
+            writer.WriteStartElement("height");
+            writer.WriteValue(Images.Height);
+            writer.WriteEndElement();
+            // End --> height
+            // Start --> depth
+            writer.WriteStartElement("depth");
+            writer.WriteValue(Images.Channels());
+            writer.WriteEndElement();
+            // End --> depth
+            writer.WriteEndElement();
+            // End --> size
+            // Start --> segmented
+            writer.WriteStartElement("segmented");
+            writer.WriteValue(0);
+            writer.WriteEndElement();
+            // End --> segmented
+
+            // Add rect here
+
+            foreach (var item in EnableRegionCollection)
+            {
+                // Start --> object
+                writer.WriteStartElement("object");
+
+                // Start --> name
+                writer.WriteStartElement("name");
+                writer.WriteString(item.Key);
+                writer.WriteEndElement();
+                // End --> name
+                // Start --> pose
+                writer.WriteStartElement("pose");
+                writer.WriteString("Unspecified");
+                writer.WriteEndElement();
+                // End --> pose
+                // Start --> truncated
+                writer.WriteStartElement("truncated");
+                writer.WriteValue(0);
+                writer.WriteEndElement();
+                // End --> truncated
+                // Start --> difficult
+                writer.WriteStartElement("difficult");
+                writer.WriteValue(0);
+                writer.WriteEndElement();
+                // End --> difficult
+                // Start --> bndbox
+                writer.WriteStartElement("bndbox");
+              
+                // Start --> xmin
+                writer.WriteStartElement("xmin");
+                writer.WriteValue(item.X);
+                writer.WriteEndElement();
+                // End --> xmin
+                // Start --> ymin
+                writer.WriteStartElement("ymin");
+                writer.WriteValue(item.Y);
+                writer.WriteEndElement();
+                // End --> ymin
+                // Start --> xmax
+                writer.WriteStartElement("xmax");
+                writer.WriteValue(item.X + item.Width);
+                writer.WriteEndElement();
+                // End --> xmax
+                // Start --> ymax
+                writer.WriteStartElement("ymax");
+                writer.WriteValue(item.Y + item.Height);
+                writer.WriteEndElement();
+                // End --> ymax
+                writer.WriteEndElement();
+                // End --> bndbox
+                
+                
+                writer.WriteEndElement();
+                // End --> object
+            }
+
+
+            //
+
+
+            writer.WriteEndDocument();
+            // End -> annotation
+            writer.Close();
+          
+
+            if(Extension.CheckFileExist(FileDirectory))
+            {
+                SelectedFile.Done = true;
+            }
+        }
+
+        private void OnOpenFile(object obj)
+        {
+            string filename = "";
+            using (var dialog = new FolderBrowserDialog())
+            {
+                System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+                filename = dialog.SelectedPath;
+            }
+            if (filename != null)
+            {
+                FileBox.Clear();
+                string[] supportedFileExt = new string[] { "*.jpg", "*.tiff", "*.tif", "*.gif", "*.bmp", "*.jpeg", "*.png" };
+
+                int SuppCount = supportedFileExt.Count();
+
+                for (int j = 0; j < SuppCount; j++)
+                {
+                    string[] files = Directory.GetFiles(filename, supportedFileExt[j], SearchOption.AllDirectories);
+
+                    int CheckFileCount = files.Count();
+                    if (CheckFileCount > 0)
+                    {
+                        for (int i = 0; i < CheckFileCount; i++)
+                        {
+                            var file = System.IO.Path.ChangeExtension(files[i].ToString(), ".xml");
+                            if(Extension.CheckFileExist(file))
+                            {
+                                FileBox.Add(new FileCollector(files[i].ToString()) { Done = true });
+                            }
+                            else
+                                FileBox.Add(new FileCollector(files[i].ToString()));
+
+                        }
+                    }
+                }
+            }
+        }
+
+        private void OnNextBox(object obj)
+        {
+            var check = EnableRegionCollection;
+            SelectedRegion = EnableRegionCollection[CharCount];
+            Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width+ SelectedRegion.X) , (int)(SelectedRegion.Height+ SelectedRegion.Y));
+            var clone = Images.Clone();
+            clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
+            Bitmap bitmap = clone.ToBitmap();
+            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+            CharCount++;
+        }
+        private void UpdateRectangle()
+        {
+           // if (SetXDone && SetYDone && SetWidthDone && SetHeightDone)
+           // {
+                Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width + SelectedRegion.X), (int)(SelectedRegion.Height + SelectedRegion.Y));
+                var clone = Images.Clone();
+                clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
+                Bitmap bitmap = clone.ToBitmap();
+                StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+             //   SetAllModeFalse();
+           // }
+       
+        }
         private void OnClickRunCommand(object obj)
         {
-            EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(10, 10, 30, 30, "C")));
-            EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(20, 60, 50, 50, "A")));
+            //SelectedFileIndex++;
+          //  SelectedFile = FileBox[SelectedFileIndex];
+            Images = new Mat(SelectedFile.FileName);
+            //   Bitmap bitmap = Images.ToBitmap();
+            //  StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+            if (OCRTool.Run(Images, out InspectionData test))
+            {
+                DisplayCollection.Clear();
+                //EnableRegionCollection.Clear();
+                for (int i = 0; i < test.ResultOutput.Count; i++)
+                {
+                    DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
+                }
+                OCRResult = test.ResultTuple;
+                EnableRegionCollection.Clear();
+                foreach (var item in test.ResultOutputRect)
+                {
+                    EnableRegionCollection.Add(new EnableRegionCollector(item));
+                }
+                //EnableRegionCollection = test.ResultOutputRect;
+            }
+            Bitmap bitmap = DisplayCollection[DisplayCollection.Count - 1].MatObjects.ToBitmap();
+            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
         }
 
         private void OnTeachCommand(object obj)
         {
+            CharCount = 0;
             EnableRegionCollection.Clear();
-            var str = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\System Setting\BrightFieldRef.jpg";
-            Mat image = new Mat(str);
-            if (OCRTool.Run(image, out InspectionData test))
+            CurrectImageDir = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\System Setting\BrightFieldRef.jpg";
+            Images = new Mat(CurrectImageDir);
+            if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
                 //EnableRegionCollection.Clear();
@@ -99,16 +358,17 @@ namespace AnnotationOpenSource.Shell
                 }
                 //EnableRegionCollection = test.ResultOutputRect;
             }
-
+            Bitmap bitmap = DisplayCollection[DisplayCollection.Count-1].MatObjects.ToBitmap();
+            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
         }
 
         private void OnPreviewMouseMove(object obj)
         {
-            if (captured)
+           /* if (captured)
             {
                 RectX = PanelX - 10.0;
                 RectY = PanelY - 10.0;
-            }
+            }*/
         }
 
         private void OnLeftMouseButtonUp(object obj)
@@ -138,13 +398,52 @@ namespace AnnotationOpenSource.Shell
         
         }
 
-       /* public class RectItem
+        /* public class RectItem
+         {
+             public double X { get; set; }
+             public double Y { get; set; }
+             public double Width { get; set; }
+             public double Height { get; set; }
+         }*/
+        #region FileBox
+        public class FileCollector : BindableBase
         {
-            public double X { get; set; }
-            public double Y { get; set; }
-            public double Width { get; set; }
-            public double Height { get; set; }
-        }*/
+            private string m_fileName;
+            private bool m_done = false;
+            public string FileName
+            {
+                get { return this.m_fileName; }
+                set { SetProperty(ref m_fileName, value); }
+            }
+            public bool Done
+            {
+                get { return this.m_done; }
+                set { SetProperty(ref m_done, value); }
+            }
+            public FileCollector(string name)
+            {
+                FileName = name;
+            }
+        }
+        private FileCollector m_selectedfile;
+        public FileCollector SelectedFile
+        {
+            get { return this.m_selectedfile; }
+            set 
+            { 
+                SetProperty(ref m_selectedfile, value);
+                Images = new Mat(SelectedFile.FileName);
+                Bitmap bitmap = Images.ToBitmap();
+                StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+            }
+        }
+        private int m_selectedfileindex;
+        public int SelectedFileIndex
+        {
+            get { return this.m_selectedfileindex; }
+            set { SetProperty(ref m_selectedfileindex, value); }
+        }
+        #endregion
         #region EnableRegion
         public class EnableRegionCollector : BindableBase
         {
@@ -170,7 +469,7 @@ namespace AnnotationOpenSource.Shell
                     Y = value.TLY;
                     Width = value.Width;
                     Height = value.Height;
-                    Key = Shape.Char;
+                    Key = value.Char;
                 }
             }
             public double X
@@ -207,13 +506,28 @@ namespace AnnotationOpenSource.Shell
             {
                 if (value != null)
                 {
+                    if(StationAWindow!=null)
+                    {
+                        var width = StationAWindow.Width;
+                        var height = StationAWindow.Height;
+                        //VerticalRes = ActualHeight / height;
+                        //HorizontalRes = ActualWidth / width;
+                        VerticalRes = 1;
+                        HorizontalRes = 1;
+                    }
                     SetProperty(ref m_EnabledShape, value);
-                    RectWidth = value.Shape.Width;
-                    RectHeight = value.Shape.Height;
-                    PanelX = RectWidth;
-                    PanelY = RectHeight;
-                    RectX = value.Shape.TLX;
-                    RectY = value.Shape.TLY;
+                    UpdateRectangle();
+                //    RectWidth = value.Shape.Width * HorizontalRes;
+                //    RectHeight = value.Shape.Height * VerticalRes;
+                //    PanelX = RectWidth;
+                 //   PanelY = RectHeight;
+                //    RectX = value.Shape.TLX * HorizontalRes;
+                //    RectY = value.Shape.TLY * VerticalRes;
+
+              
+
+
+                   
                 }
             }
         }
@@ -221,7 +535,11 @@ namespace AnnotationOpenSource.Shell
         public int SelectedRegionIndex
         {
             get { return this.m_SelectedRegionIndex; }
-            set { SetProperty(ref m_SelectedRegionIndex, value); }
+            set 
+            { 
+                SetProperty(ref m_SelectedRegionIndex, value);
+                CharCount = value;
+            }
         }
         #endregion
         public override bool IsNavigationTarget(NavigationContext navigationContext)
@@ -236,7 +554,7 @@ namespace AnnotationOpenSource.Shell
 
         public override void OnNavigatedTo(NavigationContext navigationContext)
         {
-
+            IsTrain = true;
 
         }
 
@@ -266,15 +584,8 @@ namespace AnnotationOpenSource.Shell
             get { return _stationAWindow; }
             set 
             { 
-                if (value != null)
-                {
-                    var width = value.Width;
-                    var height = value.Height;
-                    var test = ActualWidth;
-                    //OpenCV.ResizeImageToHWindow(ImageBorder, width, height);
-                    //var test = ImageBorder.Width;
-                }
-                SetProperty(ref this._stationAWindow, value); 
+                SetProperty(ref this._stationAWindow, value);
+            
             }
         }
         private double _panelX;
@@ -283,25 +594,111 @@ namespace AnnotationOpenSource.Shell
         private double _rectY;
         private double _rectWidth;
         private double _rectHeight;
-        private double VerticalRes;
-        private double HorizontalRes;
+        private double VerticalRes =1 ;
+        private double HorizontalRes = 1;
         private double m_ActualWidth;
+        private double m_ActualHeight;
+        private string m_charkey;
+        private string m_SelectedChar;
+        private string m_currectimageDir;
+        private bool m_IsTrain = true;
+        private bool m_IsTest;
+        private bool m_IsValid;
+        public string TrainMode = "";
+        public bool IsTrain
+        {
+            get { return m_IsTrain; }
+            set
+            {
+                SetProperty(ref this.m_IsTrain, value);
+                if (value)
+                {
+                    TrainMode = "train";
+                }
+            }
+        }
+        public bool IsTest
+        {
+            get { return m_IsTest; }
+            set 
+            { 
+                SetProperty(ref this.m_IsTest, value);
+                if (value) TrainMode = "test";
+            }
+        }
+        public bool IsValid
+        {
+            get { return m_IsValid; }
+            set 
+            { 
+                SetProperty(ref this.m_IsValid, value);
+                if (value) TrainMode = "valid";
+            }
+        }
+
+
+        private Mat m_Images;
+        public Mat Images
+        {
+            get { return m_Images; }
+            set { SetProperty(ref this.m_Images, value); }
+        }
+        public string CurrectImageDir
+        {
+            get { return m_currectimageDir; }
+            set { SetProperty(ref this.m_currectimageDir, value); }
+        }
+        public string SelectedChar
+        {
+            get { return m_SelectedChar; }
+            set 
+            { 
+                SetProperty(ref this.m_SelectedChar, value);
+                if(SelectedRegion!=null)
+                {
+                    SelectedRegion.Key = value;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.Char = value;
+                }
+            }
+        }
         public double ActualWidth
         {
             get { return m_ActualWidth; }
             set { SetProperty(ref this.m_ActualWidth, value); }
         }
-        public double RectWidth
+        public double ActualHeight
+        {
+            get { return m_ActualHeight; }
+            set { SetProperty(ref this.m_ActualHeight, value); }
+        }
+        public string Charkey
+        {
+            get { return m_charkey; }
+            set
+            {
+                if (value.Equals(m_charkey)) return;
+                SetProperty(ref this.m_charkey, value);
+                if (SelectedRegion != null)
+                {
+                    SelectedRegion.Key = value;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.Char = value;
+                    
+                }
+            }
+        }
+      /*  public double RectWidth
         {
             get { return _rectWidth; }
             set
             {
-                if (value.Equals(_rectWidth)) return;
+               // if (value.Equals(_rectWidth)) return;
                 SetProperty(ref this._rectWidth, value);
                 if(SelectedRegion!=null)
                 {
-                    SelectedRegion.Width = value;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.Width= value;
+                    SelectedRegion.Width = value / HorizontalRes;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.Width= value / HorizontalRes;
+                    SetWidthDone = true;
+                    //UpdateRectangle();
                 }
             }
         }
@@ -310,12 +707,14 @@ namespace AnnotationOpenSource.Shell
             get { return _rectHeight; }
             set
             {
-                if (value.Equals(_rectHeight)) return;
+              //  if (value.Equals(_rectHeight)) return;
                 SetProperty(ref this._rectHeight, value);
                 if (SelectedRegion != null)
                 {
-                    SelectedRegion.Height = value;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.Height = value;
+                    SelectedRegion.Height = value / VerticalRes;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.Height = value/VerticalRes;
+                    SetHeightDone = true;
+                   // UpdateRectangle();
                 }
             }
         }
@@ -324,12 +723,14 @@ namespace AnnotationOpenSource.Shell
             get { return _rectX; }
             set
             {
-                if (value.Equals(_rectX)) return;
+                //if (value.Equals(_rectX)) return;
                 SetProperty(ref this._rectX, value);
                 if (SelectedRegion != null)
                 {
-                    SelectedRegion.X = value;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.TLX = value;
+                    SelectedRegion.X = value / HorizontalRes;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.TLX = value / HorizontalRes;
+                    SetXDone = true;
+                 //   UpdateRectangle();
                 }
             }
         }
@@ -339,15 +740,17 @@ namespace AnnotationOpenSource.Shell
             get { return _rectY; }
             set
             {
-                if (value.Equals(_rectY)) return;
+             //   if (value.Equals(_rectY)) return;
                 SetProperty(ref this._rectY, value);
                 if (SelectedRegion != null)
                 {
-                    SelectedRegion.Y = value;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.TLY = value;
+                    SelectedRegion.Y = value / VerticalRes;
+                    EnableRegionCollection[SelectedRegionIndex].Shape.TLY = value / VerticalRes;
+                    SetYDone = true;
+                    UpdateRectangle();
                 }
             }
-        }
+        }*/
 
         public double PanelX
         {

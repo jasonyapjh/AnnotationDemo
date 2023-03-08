@@ -619,7 +619,7 @@ namespace Base.Vision.Tool
                     biggestContourRect.Width = biggestContourRect.Width + (offset * 2);
                     biggestContourRect.Height = biggestContourRect.Height + (offset * 2);
 
-                    Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(0, 0, 255, 255), 1);
+                    Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(255, 0, 255, 255), 2);
                     SetupResult.ResultOutput.Add(new MatInfo(DisplayImage, "", "Real Contour " + i.ToString()));
 
                     var roi = new Mat(Cropped_Char, biggestContourRect);
@@ -785,7 +785,7 @@ namespace Base.Vision.Tool
                     biggestContourRect.Width = biggestContourRect.Width + (offset * 2);
                     biggestContourRect.Height = biggestContourRect.Height + (offset * 2);
                    // ObtainedRect.Add(new RectInfo(biggestContourRect.X, biggestContourRect.Y, biggestContourRect.Width, biggestContourRect.Height));
-                    Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(255, 255, 255, 255), 1);
+                    Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(0, 0, 255, 255), 3);
                     
 
                   //  var roi = new Mat(Cropped_Char, biggestContourRect);
