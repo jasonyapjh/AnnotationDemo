@@ -42,7 +42,9 @@ namespace Base.Vision.Framework
         {
             get; set;
         }
+        public List<RectInfo> ResultOutputRect { get; set; }
         public string ResultTuple { get; set; }
+
        /* public HTuple ResultTuple
         {
             get; set;
@@ -63,6 +65,7 @@ namespace Base.Vision.Framework
         {
             Result = result;
             ResultOutput = new List<MatInfo>();
+            ResultOutputRect = new List<RectInfo>();
            // ResultTuple = new HTuple();
            // ResultDescription = new HTuple();
         }
@@ -78,7 +81,22 @@ namespace Base.Vision.Framework
          }*/
         #endregion
     }
-
+    public class RectInfo
+    {
+        public double TLX { get; set; }
+        public double TLY { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public string Char { get; set; }
+        public RectInfo(double tLX, double tLY, double width, double height, string foundchar)
+        {
+            TLX = tLX;
+            TLY = tLY;
+            Width = width;
+            Height = height;
+            Char = foundchar;
+        }
+    }
     public class MatInfo
     {
         public Mat MatObject

@@ -6,8 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+//using static System.Net.Mime.MediaTypeNames;
+using System.Windows.Threading;
 
 namespace Base.Vision
 {
@@ -74,6 +77,41 @@ namespace Base.Vision
 
             }
          
+        }
+        public static void ResizeImageToHWindow(System.Windows.Controls.Image hWindow, double imageWidth, double imageHeight)
+        {
+            var dispatcher = Application.Current.Dispatcher;
+
+            // CheckAccess() is somehow hidden from the intellisense.
+            bool hasUIAccess = dispatcher.CheckAccess();
+
+
+            if (hasUIAccess)
+            {
+                FrameworkElement hFrameWindow = hWindow.Parent as FrameworkElement;
+
+                if ((hFrameWindow != null) && (hFrameWindow.ActualWidth > 0) && (hFrameWindow.ActualHeight > 0))
+                {
+                    if ((hFrameWindow.ActualWidth / hFrameWindow.ActualHeight) > (imageWidth / imageHeight))
+                    {
+                        // Width > Height. Respect height.
+                        hWindow.Width = hFrameWindow.ActualHeight * imageWidth / imageHeight;
+                        hWindow.Height = hFrameWindow.ActualHeight;
+                    }
+                    else if ((hFrameWindow.ActualHeight / hFrameWindow.ActualWidth) > (imageHeight / imageWidth))
+                    {
+                        // Height > Width. Respect Width.
+                        hWindow.Width = hFrameWindow.ActualWidth;
+                        hWindow.Height = hFrameWindow.ActualWidth * imageHeight / imageWidth; ;
+                    }
+                }
+                hWindow.UpdateLayout();
+            }
+            else
+            {
+                var action = new Action<System.Windows.Controls.Image, double, double>(ResizeImageToHWindow);
+                dispatcher.Invoke(action, DispatcherPriority.Background, hWindow, imageWidth, imageHeight);
+            }
         }
         #endregion
     }

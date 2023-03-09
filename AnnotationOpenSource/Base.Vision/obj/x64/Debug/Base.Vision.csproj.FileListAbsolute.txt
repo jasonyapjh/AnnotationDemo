@@ -1,6 +1,6 @@
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\dll\x64\OpenCvSharpExtern.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\dll\x86\OpenCvSharpExtern.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\dll\x86\opencv_videoio_ffmpeg455.dll
-C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\dll\x64\OpenCvSharpExtern.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\dll\x64\opencv_videoio_ffmpeg455_64.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Base.Vision.dll.config
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Base.Vision.dll

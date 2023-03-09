@@ -99,6 +99,7 @@
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.2\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -138,7 +139,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AnnotationConfig.cs" />
+    <Compile Include="Framework\ImageBorder.cs" />
+    <Compile Include="Framework\InputBindingsManager.cs" />
     <Compile Include="Framework\MouseBehaviour.cs" />
+    <Compile Include="Framework\MoveThumb.cs" />
+    <Compile Include="Framework\ResizeThumb.cs" />
+    <Compile Include="Framework\SizeObserver.cs" />
     <Compile Include="Framework\ZoomBorder.cs" />
     <Compile Include="Shell\AppBootstrapper.cs" />
     <Compile Include="Shell\MainContent.xaml.cs" />
@@ -210,6 +217,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\..\..\AnnonationsOpenSource\Base.File\Base.ConfigServer.csproj">
+      <Project>{1D17F31E-F0F5-451D-AD95-F88F515DC621}</Project>
+      <Name>Base.ConfigServer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\AnnonationsOpenSource\Base\Base.csproj">
       <Project>{B3E6A79F-0F74-4ED6-B083-1972B587ECD1}</Project>
       <Name>Base</Name>

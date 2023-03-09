@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Const.cs" />
+    <Compile Include="Framework\ArrayComparer.cs" />
     <Compile Include="Framework\DisplayObject.cs" />
     <Compile Include="Framework\InspectionData.cs" />
     <Compile Include="OCRShapeMatchTool.cs" />
@@ -93,6 +94,7 @@
       <HintPath>..\packages\OpenCvSharp4.Extensions.4.7.0.20230115\lib\netstandard2.0\OpenCvSharp.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="Prism, Version=8.1.97.5141, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
       <HintPath>..\packages\Prism.Core.8.1.97\lib\net47\Prism.dll</HintPath>
     </Reference>
