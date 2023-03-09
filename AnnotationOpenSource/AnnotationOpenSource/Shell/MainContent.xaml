@@ -152,6 +152,9 @@
                 </ListBox.ItemTemplate>
 
             </ListBox>
+            <Grid Grid.Row="1" Grid.Column="0">
+                <Button Grid.Column="2" Content="Delete Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2"/>
+            </Grid>
             <const:ZoomBorder Grid.Column="1" x:Name="border" ClipToBounds="True" Background="Gray">
                 <Image Name="ImageBorder"  Source="{Binding StationAWindow}" Stretch="Uniform"  UseLayoutRounding="True" SnapsToDevicePixels="True" VerticalAlignment="Top" MB:SizeObserver.Observe="True" 
                        MB:SizeObserver.ObservedWidth="{Binding ActualWidth, Mode=OneWayToSource}" MB:SizeObserver.ObservedHeight="{Binding ActualHeight, Mode=OneWayToSource}"/>
@@ -161,6 +164,10 @@
                 <CheckBox IsChecked="{Binding IsTrain}" Content="Train" Margin="5"/>
                 <CheckBox IsChecked="{Binding IsTest}" Content="Test" Margin="5"/>
                 <CheckBox IsChecked="{Binding IsValid}" Content="Valid" Margin="5"/>
+                <TextBlock Width="60" Text="Processed : " VerticalAlignment="Center" Margin="20,0,10,0"/>
+                <TextBlock Width="120" Text="{Binding ProcessImage}" VerticalAlignment="Center"/>
+                <TextBlock Width="60" Text="Total : " VerticalAlignment="Center"/>
+                <TextBlock Width="100" Text="{Binding TotalImage}" VerticalAlignment="Center"/>
             </StackPanel>
             <!--Image Grid.Column="1" Source="{Binding StationAWindow}"/-->
             <!--ItemsControl ItemsSource="{Binding RectItems}" Grid.Column="1">

@@ -766,11 +766,11 @@ namespace Base.Vision.Tool
             for (int i = 0; i < orderedContours2.Length; i++)
             {
                 var biggestContourRect = Cv2.BoundingRect(orderedContours2[i]);
-                if (biggestContourRect.Height > 30 && biggestContourRect.Width > 15)
+                if (biggestContourRect.Height > 40 && biggestContourRect.Width > 20)
                 {
                     var contour = orderedContours2[i];
 
-                    int offset = 3;
+                    int offset = 5;
                     if ((biggestContourRect.X - 2) > -1)
                         biggestContourRect.X = biggestContourRect.X - offset;
                     else
@@ -834,6 +834,10 @@ namespace Base.Vision.Tool
                             RunResult.ResultOutputRect.Add(new RectInfo(biggestContourRect.X, biggestContourRect.Y, biggestContourRect.Width, biggestContourRect.Height, str));
                         }
                         foundFormat++;
+                    }
+                    else
+                    {
+                        RunResult.ResultOutputRect.Add(new RectInfo(biggestContourRect.X, biggestContourRect.Y, biggestContourRect.Width, biggestContourRect.Height, "A"));
                     }
                  
                 }

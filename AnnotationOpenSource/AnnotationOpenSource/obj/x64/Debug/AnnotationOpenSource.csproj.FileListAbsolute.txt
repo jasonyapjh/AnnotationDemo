@@ -85,14 +85,15 @@ C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSourc
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.csproj.CopyComplete
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.exe
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.pdb
-C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\dll\x86\opencv_videoio_ffmpeg455.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\dll\x86\OpenCvSharpExtern.dll
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\dll\x86\opencv_videoio_ffmpeg455.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\dll\x64\OpenCvSharpExtern.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\dll\x64\opencv_videoio_ffmpeg455_64.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\AnnotationOpenSource.exe.config
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\AnnotationOpenSource.exe
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\AnnotationOpenSource.pdb
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.dll
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.File.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.Vision.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Microsoft.Xaml.Behaviors.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\OpenCvSharp.dll
@@ -114,6 +115,7 @@ C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOp
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.VS2010.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Xceed.Wpf.Toolkit.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\log4net.dll
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.File.pdb
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.pdb
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.Vision.pdb
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.Vision.dll.config

@@ -139,6 +139,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AnnotationConfig.cs" />
     <Compile Include="Framework\ImageBorder.cs" />
     <Compile Include="Framework\InputBindingsManager.cs" />
     <Compile Include="Framework\MouseBehaviour.cs" />
@@ -216,6 +217,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\..\..\AnnonationsOpenSource\Base.File\Base.ConfigServer.csproj">
+      <Project>{1D17F31E-F0F5-451D-AD95-F88F515DC621}</Project>
+      <Name>Base.ConfigServer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\AnnonationsOpenSource\Base\Base.csproj">
       <Project>{B3E6A79F-0F74-4ED6-B083-1972B587ECD1}</Project>
       <Name>Base</Name>

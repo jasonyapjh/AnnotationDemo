@@ -34,6 +34,9 @@ using System.Linq;
 using System.Windows.Shapes;
 using Base.Common;
 using System.Xml;
+using System.Data.SqlTypes;
+using System.Windows.Media.Media3D;
+using Base.ConfigServer;
 
 namespace AnnotationOpenSource.Shell
 {
@@ -53,6 +56,18 @@ namespace AnnotationOpenSource.Shell
             get { return _ocrResult; }
             set { SetProperty(ref _ocrResult, value); }
         }
+        private int _processimage;
+        public int ProcessImage
+        {
+            get { return _processimage; }
+            set { SetProperty(ref _processimage, value); }
+        }
+        private int _totalimage;
+        public int TotalImage
+        {
+            get { return _totalimage; }
+            set { SetProperty(ref _totalimage, value); }
+        }
         public DelegateCommand<Object> ClickProductionCommand { get; set; }
         public DelegateCommand<Object> ClickTeachCommand { get; set; }
         public DelegateCommand<Object> LeftMouseButtonDown { get; set; }
@@ -64,6 +79,7 @@ namespace AnnotationOpenSource.Shell
         public DelegateCommand<object> ClickCreateAnnotationCommand { get; set; }
         public DelegateCommand<object> ClickNewBoxCommand { get; set; }
         public DelegateCommand<object> ClickDeleteBoxCommand { get; set; }
+        public DelegateCommand<object> ClickDeleteImageCommand { get; set; }
         public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
         public ObservableCollection<DisplayObject> DisplayCollection { get; private set; }
         public ObservableCollection<string> CharBox { get; private set; }
@@ -85,6 +101,7 @@ namespace AnnotationOpenSource.Shell
             ClickNextBoxCommand = new DelegateCommand<object>(OnNextBox);
             ClickFileCommand = new DelegateCommand<object>(OnOpenFile);
             ClickCreateAnnotationCommand = new DelegateCommand<object>(OnCreateAnnotations);
+            ClickDeleteImageCommand = new DelegateCommand<object>(OnDeleteImage);
             ClickNewBoxCommand = new DelegateCommand<object>(OnAddNewBox);
             ClickDeleteBoxCommand = new DelegateCommand<object>(OnDeleteBox);
             Configuration = new OCRShapeMatchConfig();
@@ -102,6 +119,16 @@ namespace AnnotationOpenSource.Shell
             IsTrain = true;
         }
 
+        private void OnDeleteImage(object obj)
+        {
+            var str = SelectedFile.FileName;
+            SelectedFileIndex++;
+            FileBox.RemoveAt(SelectedFileIndex-1);
+            File.Delete(str);
+            //SelectedFileIndex++;
+            TotalImage--;
+        }
+
         private void OnDeleteBox(object obj)
         {
             EnableRegionCollection.RemoveAt(SelectedRegionIndex);
@@ -115,137 +142,35 @@ namespace AnnotationOpenSource.Shell
         private void OnCreateAnnotations(object obj)
         {
             FileDirectory = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
-            var sts = new XmlWriterSettings()
-            {
-                Indent = true,
-                //ConformanceLevel = ConformanceLevel.Fragment,
-                OmitXmlDeclaration = true,
-            };
 
-            XmlWriter writer = XmlWriter.Create(FileDirectory, sts);
-            writer.WriteStartDocument();
+            var config = new AnnotationConfig();
 
-            // Start -> annotation
-            writer.WriteStartElement("annotation");
-
-            // Start --> folder
-            writer.WriteStartElement("folder");
-            writer.WriteString(TrainMode);
-            writer.WriteEndElement();
-            // End --> folder
-            // Start --> filename
-            writer.WriteStartElement("filename");
-            writer.WriteString(System.IO.Path.GetFileName(SelectedFile.FileName));
-            writer.WriteEndElement();
-            // End --> filename
-            // Start --> path
-            writer.WriteStartElement("path");
-            writer.WriteString(SelectedFile.FileName);
-            writer.WriteEndElement();
-            // End --> path
-            // Start --> source ---> database
-            writer.WriteStartElement("source");
-            writer.WriteStartElement("database");
-            writer.WriteString("Unknown");
-            writer.WriteEndElement();
-            writer.WriteEndElement();
-            // End --> source
-            // Start --> size
-            writer.WriteStartElement("size");
-            // Start --> width
-            writer.WriteStartElement("width");
-            writer.WriteValue(Images.Width);
-            writer.WriteEndElement();
-            // End --> width
-            // Start --> height
-            writer.WriteStartElement("height");
-            writer.WriteValue(Images.Height);
-            writer.WriteEndElement();
-            // End --> height
-            // Start --> depth
-            writer.WriteStartElement("depth");
-            writer.WriteValue(Images.Channels());
-            writer.WriteEndElement();
-            // End --> depth
-            writer.WriteEndElement();
-            // End --> size
-            // Start --> segmented
-            writer.WriteStartElement("segmented");
-            writer.WriteValue(0);
-            writer.WriteEndElement();
-            // End --> segmented
+            config.folder = TrainMode;
+            config.filename = System.IO.Path.GetFileName(SelectedFile.FileName);
+            config.path = SelectedFile.FileName;
+            config.size.width = Images.Width;
+            config.size.height = Images.Height;
+            config.size.depth = Images.Channels();
 
             // Add rect here
 
             foreach (var item in EnableRegionCollection)
             {
                 // Start --> object
-                writer.WriteStartElement("object");
-
-                // Start --> name
-                writer.WriteStartElement("name");
-                writer.WriteString(item.Key);
-                writer.WriteEndElement();
-                // End --> name
-                // Start --> pose
-                writer.WriteStartElement("pose");
-                writer.WriteString("Unspecified");
-                writer.WriteEndElement();
-                // End --> pose
-                // Start --> truncated
-                writer.WriteStartElement("truncated");
-                writer.WriteValue(0);
-                writer.WriteEndElement();
-                // End --> truncated
-                // Start --> difficult
-                writer.WriteStartElement("difficult");
-                writer.WriteValue(0);
-                writer.WriteEndElement();
-                // End --> difficult
-                // Start --> bndbox
-                writer.WriteStartElement("bndbox");
-              
-                // Start --> xmin
-                writer.WriteStartElement("xmin");
-                writer.WriteValue(item.X);
-                writer.WriteEndElement();
-                // End --> xmin
-                // Start --> ymin
-                writer.WriteStartElement("ymin");
-                writer.WriteValue(item.Y);
-                writer.WriteEndElement();
-                // End --> ymin
-                // Start --> xmax
-                writer.WriteStartElement("xmax");
-                writer.WriteValue(item.X + item.Width);
-                writer.WriteEndElement();
-                // End --> xmax
-                // Start --> ymax
-                writer.WriteStartElement("ymax");
-                writer.WriteValue(item.Y + item.Height);
-                writer.WriteEndElement();
-                // End --> ymax
-                writer.WriteEndElement();
-                // End --> bndbox
-                
-                
-                writer.WriteEndElement();
-                // End --> object
+                config.objects.Add(new Objects() { name = item.Key, bndbox = new BoundingBox((int)item.X, (int)item.Y, (int)(item.X + item.Width), (int)(item.Y + item.Height)) });
             }
 
-
-            //
-
-
-            writer.WriteEndDocument();
-            // End -> annotation
-            writer.Close();
-          
-
-            if(Extension.CheckFileExist(FileDirectory))
+            Serializer.XmlSave(config, FileDirectory);
+         
+            
+            if (Extension.CheckFileExist(FileDirectory))
             {
                 SelectedFile.Done = true;
             }
+
+            SelectedFileIndex++;
+            ProcessImage++;
+            RunInspection();
         }
 
         private void OnOpenFile(object obj)
@@ -263,6 +188,8 @@ namespace AnnotationOpenSource.Shell
 
                 int SuppCount = supportedFileExt.Count();
 
+                TotalImage = 0;
+                ProcessImage++;
                 for (int j = 0; j < SuppCount; j++)
                 {
                     string[] files = Directory.GetFiles(filename, supportedFileExt[j], SearchOption.AllDirectories);
@@ -272,10 +199,12 @@ namespace AnnotationOpenSource.Shell
                     {
                         for (int i = 0; i < CheckFileCount; i++)
                         {
+                            TotalImage = +CheckFileCount;
                             var file = System.IO.Path.ChangeExtension(files[i].ToString(), ".xml");
                             if(Extension.CheckFileExist(file))
                             {
                                 FileBox.Add(new FileCollector(files[i].ToString()) { Done = true });
+                                ProcessImage++;
                             }
                             else
                                 FileBox.Add(new FileCollector(files[i].ToString()));
@@ -310,13 +239,32 @@ namespace AnnotationOpenSource.Shell
            // }
        
         }
+        private void RunInspection()
+        {
+            if (OCRTool.Run(Images, out InspectionData test))
+            {
+                DisplayCollection.Clear();
+                //EnableRegionCollection.Clear();
+                for (int i = 0; i < test.ResultOutput.Count; i++)
+                {
+                    DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
+                }
+                OCRResult = test.ResultTuple;
+                EnableRegionCollection.Clear();
+                foreach (var item in test.ResultOutputRect)
+                {
+                    EnableRegionCollection.Add(new EnableRegionCollector(item));
+                }
+                //EnableRegionCollection = test.ResultOutputRect;
+            }
+            Bitmap bitmap = DisplayCollection[DisplayCollection.Count - 1].MatObjects.ToBitmap();
+            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+        }
         private void OnClickRunCommand(object obj)
         {
-            //SelectedFileIndex++;
-          //  SelectedFile = FileBox[SelectedFileIndex];
-            Images = new Mat(SelectedFile.FileName);
-            //   Bitmap bitmap = Images.ToBitmap();
-            //  StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+           
+            //Images = new Mat(SelectedFile.FileName);
+
             if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
@@ -339,27 +287,30 @@ namespace AnnotationOpenSource.Shell
 
         private void OnTeachCommand(object obj)
         {
-            CharCount = 0;
-            EnableRegionCollection.Clear();
-            CurrectImageDir = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\System Setting\BrightFieldRef.jpg";
-            Images = new Mat(CurrectImageDir);
-            if (OCRTool.Run(Images, out InspectionData test))
-            {
-                DisplayCollection.Clear();
-                //EnableRegionCollection.Clear();
-                for (int i = 0; i < test.ResultOutput.Count; i++)
-                {
-                    DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
-                }
-                OCRResult = test.ResultTuple;
-                foreach(var item in test.ResultOutputRect)
-                {
-                    EnableRegionCollection.Add(new EnableRegionCollector(item));
-                }
-                //EnableRegionCollection = test.ResultOutputRect;
-            }
-            Bitmap bitmap = DisplayCollection[DisplayCollection.Count-1].MatObjects.ToBitmap();
-            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+           /* var config = new AnnotationConfig();
+            CurrectImageDir = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Testing.xml";
+            Serializer.XmlSave(config, CurrectImageDir);*/
+            /* CharCount = 0;
+             EnableRegionCollection.Clear();
+           
+             Images = new Mat(CurrectImageDir);
+             if (OCRTool.Run(Images, out InspectionData test))
+             {
+                 DisplayCollection.Clear();
+                 //EnableRegionCollection.Clear();
+                 for (int i = 0; i < test.ResultOutput.Count; i++)
+                 {
+                     DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
+                 }
+                 OCRResult = test.ResultTuple;
+                 foreach(var item in test.ResultOutputRect)
+                 {
+                     EnableRegionCollection.Add(new EnableRegionCollector(item));
+                 }
+                 //EnableRegionCollection = test.ResultOutputRect;
+             }
+             Bitmap bitmap = DisplayCollection[DisplayCollection.Count-1].MatObjects.ToBitmap();
+             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);*/
         }
 
         private void OnPreviewMouseMove(object obj)
@@ -432,9 +383,40 @@ namespace AnnotationOpenSource.Shell
             set 
             { 
                 SetProperty(ref m_selectedfile, value);
-                Images = new Mat(SelectedFile.FileName);
+                Images = new Mat(SelectedFile.FileName, ImreadModes.Unchanged);
                 Bitmap bitmap = Images.ToBitmap();
                 StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+
+                var file = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
+                if (Extension.CheckFileExist(file))
+                {
+                    EnableRegionCollection.Clear();
+                    var config= (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file);
+                    if(config.folder=="train")
+                    {
+                        IsTrain = true;
+                        IsTest = false;
+                        IsValid = false;
+                    }
+                    else if (config.folder == "test")
+                    {
+                        IsTrain = false;
+                        IsTest = true;
+                        IsValid = false;
+                    }
+                    else
+                    {
+                        IsTrain = false;
+                        IsTest = false;
+                        IsValid = true;
+                    }
+                    foreach(var item in config.objects)
+                    {
+
+                        EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(item.bndbox.xmin, item.bndbox.ymin, (item.bndbox.xmax - item.bndbox.xmin), (item.bndbox.ymax - item.bndbox.ymin), item.name)));
+                    }
+                }
+                
             }
         }
         private int m_selectedfileindex;
