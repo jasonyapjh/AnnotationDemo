@@ -80,6 +80,18 @@ namespace AnnotationOpenSource.Shell
         public DelegateCommand<object> ClickNewBoxCommand { get; set; }
         public DelegateCommand<object> ClickDeleteBoxCommand { get; set; }
         public DelegateCommand<object> ClickDeleteImageCommand { get; set; }
+        public DelegateCommand<object> ClickUpCommand { get;set; }
+        public DelegateCommand<object> ClickDownCommand { get; set; }
+
+        public DelegateCommand<object> ClickLeftCommand { get; set; }
+        public DelegateCommand<object> ClickRightCommand { get; set; }
+        public DelegateCommand<object> ClickIncreaseWidthCommand { get; set; }
+        public DelegateCommand<object> ClickDecreaseWidthCommand { get; set; }
+        public DelegateCommand<object> ClickIncreaseHeightCommand { get; set; }
+        public DelegateCommand<object> ClickDecreaseHeightCommand { get; set; }
+
+
+
         public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
         public ObservableCollection<DisplayObject> DisplayCollection { get; private set; }
         public ObservableCollection<string> CharBox { get; private set; }
@@ -104,6 +116,14 @@ namespace AnnotationOpenSource.Shell
             ClickDeleteImageCommand = new DelegateCommand<object>(OnDeleteImage);
             ClickNewBoxCommand = new DelegateCommand<object>(OnAddNewBox);
             ClickDeleteBoxCommand = new DelegateCommand<object>(OnDeleteBox);
+            ClickUpCommand = new DelegateCommand<object>(OnUpCommand);
+            ClickDownCommand = new DelegateCommand<object>(OnDownCommand);
+            ClickLeftCommand = new DelegateCommand<object>(OnLeftCommand);
+            ClickRightCommand = new DelegateCommand<object>(OnRightCommand);
+            ClickIncreaseWidthCommand = new DelegateCommand<object>(OnIncWidthCommand);
+            ClickDecreaseWidthCommand = new DelegateCommand<object>(OnDecWidthCommand);
+            ClickIncreaseHeightCommand = new DelegateCommand<object>(OnIncHeightCommand);
+            ClickDecreaseHeightCommand = new DelegateCommand<object>(OnDecHeightCommand);
             Configuration = new OCRShapeMatchConfig();
             EnableRegionCollection = new ObservableCollection<EnableRegionCollector>();
             Configuration = new OCRShapeMatchConfig();
@@ -117,6 +137,54 @@ namespace AnnotationOpenSource.Shell
             NumberBox = new ObservableCollection<string>() { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
             //ImageBorder = new Image();
             IsTrain = true;
+        }
+
+        private void OnDecHeightCommand(object obj)
+        {
+            SelectedRegion.Height--;
+            UpdateRectangle();
+        }
+
+        private void OnIncHeightCommand(object obj)
+        {
+            SelectedRegion.Height++;
+            UpdateRectangle();
+        }
+
+        private void OnDecWidthCommand(object obj)
+        {
+            SelectedRegion.Width--;
+            UpdateRectangle();
+        }
+
+        private void OnIncWidthCommand(object obj)
+        {
+            SelectedRegion.Width++;
+            UpdateRectangle();
+        }
+
+        private void OnRightCommand(object obj)
+        {
+            SelectedRegion.X++;
+            UpdateRectangle();
+        }
+
+        private void OnLeftCommand(object obj)
+        {
+            SelectedRegion.X--;
+            UpdateRectangle();
+        }
+
+        private void OnDownCommand(object obj)
+        {
+            SelectedRegion.Y++;
+            UpdateRectangle();
+        }
+
+        private void OnUpCommand(object obj)
+        {
+            SelectedRegion.Y--;
+            UpdateRectangle();
         }
 
         private void OnDeleteImage(object obj)
@@ -241,6 +309,12 @@ namespace AnnotationOpenSource.Shell
         }
         private void RunInspection()
         {
+            if(Images.Width==0 || Images.Height==0)
+            {
+                System.Windows.MessageBox.Show("File is corrupted!");
+                return;
+            }
+                
             if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
@@ -384,39 +458,43 @@ namespace AnnotationOpenSource.Shell
             { 
                 SetProperty(ref m_selectedfile, value);
                 Images = new Mat(SelectedFile.FileName, ImreadModes.Unchanged);
-                Bitmap bitmap = Images.ToBitmap();
-                StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
-
-                var file = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
-                if (Extension.CheckFileExist(file))
+                if (Images.Width != 0 || Images.Height != 0)
                 {
-                    EnableRegionCollection.Clear();
-                    var config= (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file);
-                    if(config.folder=="train")
-                    {
-                        IsTrain = true;
-                        IsTest = false;
-                        IsValid = false;
-                    }
-                    else if (config.folder == "test")
-                    {
-                        IsTrain = false;
-                        IsTest = true;
-                        IsValid = false;
-                    }
-                    else
-                    {
-                        IsTrain = false;
-                        IsTest = false;
-                        IsValid = true;
-                    }
-                    foreach(var item in config.objects)
-                    {
+                    Bitmap bitmap = Images.ToBitmap();
+                    StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
 
-                        EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(item.bndbox.xmin, item.bndbox.ymin, (item.bndbox.xmax - item.bndbox.xmin), (item.bndbox.ymax - item.bndbox.ymin), item.name)));
+                    var file = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
+                    if (Extension.CheckFileExist(file))
+                    {
+                        EnableRegionCollection.Clear();
+                        var config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file);
+                        if (config.folder == "train")
+                        {
+                            IsTrain = true;
+                            IsTest = false;
+                            IsValid = false;
+                        }
+                        else if (config.folder == "test")
+                        {
+                            IsTrain = false;
+                            IsTest = true;
+                            IsValid = false;
+                        }
+                        else
+                        {
+                            IsTrain = false;
+                            IsTest = false;
+                            IsValid = true;
+                        }
+                        foreach (var item in config.objects)
+                        {
+
+                            EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(item.bndbox.xmin, item.bndbox.ymin, (item.bndbox.xmax - item.bndbox.xmin), (item.bndbox.ymax - item.bndbox.ymin), item.name)));
+                        }
                     }
                 }
-                
+                else
+                    System.Windows.MessageBox.Show("File is corrupted!");
             }
         }
         private int m_selectedfileindex;

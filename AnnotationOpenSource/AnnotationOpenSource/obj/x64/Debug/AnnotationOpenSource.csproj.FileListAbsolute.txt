@@ -174,3 +174,5 @@ C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOp
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.csproj.CopyComplete
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.exe
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.pdb
+C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.File.dll
+C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\Base.File.pdb

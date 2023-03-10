@@ -316,6 +316,28 @@
                                     <RowDefinition Height="*"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Button Grid.RowSpan="2" Grid.Column="0" Content="Left" Foreground="Black" Command="{Binding ClickLeftCommand}" Height="35"/>
+                                    <Button Grid.Column="1" Content="Up" Foreground="Black" Command="{Binding ClickUpCommand}" Height="35"/>
+                                    <Button Grid.Column="1" Grid.Row="1" Content="Down" Foreground="Black" Command="{Binding ClickDownCommand}" Height="35"/>
+                                    <Button Grid.RowSpan="2" Grid.Column="2" Content="Right" Foreground="Black" Command="{Binding ClickRightCommand}" Height="35"/>
+                                    <Button Grid.Column="4" Grid.Row="0" Content="Width++" Foreground="Black" Command="{Binding ClickIncreaseWidthCommand}" Height="35"/>
+                                    <Button Grid.Column="4" Grid.Row="1" Content="Width--" Foreground="Black" Command="{Binding ClickDecreaseWidthCommand}" Height="35"/>
+                                    <Button Grid.Column="5" Grid.Row="0" Content="Height++" Foreground="Black" Command="{Binding ClickIncreaseHeightCommand}" Height="35"/>
+                                    <Button Grid.Column="5" Grid.Row="1" Content="Height--" Foreground="Black" Command="{Binding ClickDecreaseHeightCommand}" Height="35"/>
+                                </Grid>
                                 <Grid Grid.Row="1" Margin="2">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
