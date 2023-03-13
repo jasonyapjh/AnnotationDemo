@@ -138,7 +138,7 @@ namespace AnnotationOpenSource.Shell
             //ImageBorder = new Image();
             IsTrain = true;
         }
-
+        #region Shape adjustment
         private void OnDecHeightCommand(object obj)
         {
             SelectedRegion.Height--;
@@ -186,7 +186,7 @@ namespace AnnotationOpenSource.Shell
             SelectedRegion.Y--;
             UpdateRectangle();
         }
-
+        #endregion
         private void OnDeleteImage(object obj)
         {
             var str = SelectedFile.FileName;
@@ -251,6 +251,8 @@ namespace AnnotationOpenSource.Shell
             }
             if (filename != null)
             {
+               // SelectedFile = null;
+                //SelectedFileIndex = 0;
                 FileBox.Clear();
                 string[] supportedFileExt = new string[] { "*.jpg", "*.tiff", "*.tif", "*.gif", "*.bmp", "*.jpeg", "*.png" };
 

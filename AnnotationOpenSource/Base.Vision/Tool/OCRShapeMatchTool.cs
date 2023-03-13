@@ -21,6 +21,8 @@ using System.Collections;
 using System.Windows.Media.Animation;
 using System.Windows.Media;
 using OpenCvSharp.ML;
+//using Tensorflow;
+using Shape = Base.Vision.Shapes.Base.Shape;
 
 namespace Base.Vision.Tool
 {
@@ -690,6 +692,12 @@ namespace Base.Vision.Tool
 
             SetupResult.ResultTuple = OutputString;
 
+
+
+           // var testkeras = Keras.Models.Model.LoadModel(@"C:\Users\jason.yap\Desktop\ODOCR\saved_model");
+          
+
+
             inspectionData = SetupResult;
             return true;     
         }
@@ -728,18 +736,18 @@ namespace Base.Vision.Tool
             RunResult.ResultOutput.Add(new MatInfo(Canny, "", "Canny Check"));
 
             // Process whole image
-       /*     Display_BrightRefImage.Threshold(0, 100, ThresholdTypes.Binary);
-            Mat TestingMorphed_Char = Display_BrightRefImage.MorphologyEx(MorphTypes.Open, kernel, null, 3);
-            RunResult.ResultOutput.Add(new MatInfo(TestingMorphed_Char, "", "Testing Morphed_Char"));
-            Mat TestCanny = new Mat();
-            Cv2.Canny(TestingMorphed_Char, TestCanny, 10, 30);
-            RunResult.ResultOutput.Add(new MatInfo(TestCanny, "", "Whole Canny Check"));*/
+            /*     Display_BrightRefImage.Threshold(0, 100, ThresholdTypes.Binary);
+                 Mat TestingMorphed_Char = Display_BrightRefImage.MorphologyEx(MorphTypes.Open, kernel, null, 3);
+                 RunResult.ResultOutput.Add(new MatInfo(TestingMorphed_Char, "", "Testing Morphed_Char"));
+                 Mat TestCanny = new Mat();
+                 Cv2.Canny(TestingMorphed_Char, TestCanny, 10, 30);
+                 RunResult.ResultOutput.Add(new MatInfo(TestCanny, "", "Whole Canny Check"));*/
 
 
             //
 
 
-
+        
 
 
 
@@ -787,12 +795,7 @@ namespace Base.Vision.Tool
                    // ObtainedRect.Add(new RectInfo(biggestContourRect.X, biggestContourRect.Y, biggestContourRect.Width, biggestContourRect.Height));
                     Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(0, 0, 255, 255), 3);
                     
-
-                  //  var roi = new Mat(Cropped_Char, biggestContourRect);
-
-                  //  var resizedImage = new Mat();
-
-                //    Cv2.Resize(roi, resizedImage, ResizeFormat); //resize to 10X10
+               
 
                     double[] huMoments = new double[7];
                  //   RunResult.ResultOutput.Add(new MatInfo(resizedImage, "", "ROI_2 " + i.ToString()));
