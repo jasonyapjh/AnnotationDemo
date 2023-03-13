@@ -21,8 +21,10 @@ using System.Collections;
 using System.Windows.Media.Animation;
 using System.Windows.Media;
 using OpenCvSharp.ML;
+using Keras;
 //using Tensorflow;
 using Shape = Base.Vision.Shapes.Base.Shape;
+using Keras.Datasets;
 
 namespace Base.Vision.Tool
 {
@@ -694,8 +696,22 @@ namespace Base.Vision.Tool
 
 
 
-           // var testkeras = Keras.Models.Model.LoadModel(@"C:\Users\jason.yap\Desktop\ODOCR\saved_model");
-          
+            // var testkeras = Keras.Models.Model.LoadModel(@"C:\Users\jason.yap\Desktop\ODOCR\saved_model");
+            int batch_size = 1000;   //Size of the batches per epoch
+            int num_classes = 10;    //We got 10 outputs since 
+                                     //we can predict 10 different labels seen on the 
+                                     //dataset: https://github.com/zalandoresearch/fashion-mnist#labels
+            int epochs = 30;         //Amount on trainingperiods, 
+                                     //I figure it out that the maximum is something about 
+                                     //700 epochs, after this it won't increase the 
+                                     //accuracy siginificantly
+
+            // input image dimensions
+            int img_rows = 28, img_cols = 28;
+
+            // the data, split between train and test sets
+            var ((x_train, y_train), (x_test, y_test)) =
+                                      FashionMNIST.LoadData();
 
 
             inspectionData = SetupResult;

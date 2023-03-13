@@ -91,6 +91,9 @@
     <Reference Include="Google.Protobuf, Version=3.19.6.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Protobuf.3.19.6\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
+    <Reference Include="Keras, Version=3.8.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Keras.NET.3.8.5\lib\netstandard2.0\Keras.dll</HintPath>
+    </Reference>
     <Reference Include="MethodBoundaryAspect, Version=2.0.148.0, Culture=neutral, PublicKeyToken=296379d5065c9d61, processorArchitecture=MSIL">
       <HintPath>..\packages\MethodBoundaryAspect.Fody.2.0.148\lib\net462\MethodBoundaryAspect.dll</HintPath>
     </Reference>
