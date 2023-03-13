@@ -696,8 +696,8 @@ namespace Base.Vision.Tool
 
 
 
-            // var testkeras = Keras.Models.Model.LoadModel(@"C:\Users\jason.yap\Desktop\ODOCR\saved_model");
-            int batch_size = 1000;   //Size of the batches per epoch
+             var testkeras = Keras.Models.Model.LoadModel(@"C:\Users\jason.yap\Desktop\ODOCR\saved_model");
+           /* int batch_size = 1000;   //Size of the batches per epoch
             int num_classes = 10;    //We got 10 outputs since 
                                      //we can predict 10 different labels seen on the 
                                      //dataset: https://github.com/zalandoresearch/fashion-mnist#labels
@@ -711,7 +711,7 @@ namespace Base.Vision.Tool
 
             // the data, split between train and test sets
             var ((x_train, y_train), (x_test, y_test)) =
-                                      FashionMNIST.LoadData();
+                                      FashionMNIST.LoadData();*/
 
 
             inspectionData = SetupResult;

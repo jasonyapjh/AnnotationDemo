@@ -51,3 +51,6 @@ C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\obj\x64\Debug\Base.Vision.csproj.CopyComplete
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\obj\x64\Debug\Base.Vision.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\obj\x64\Debug\Base.Vision.pdb
+C:\Users\jason.yap\Source\Repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Keras.dll
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Tensorflow.Binding.dll
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Tensorflow.Binding.xml
