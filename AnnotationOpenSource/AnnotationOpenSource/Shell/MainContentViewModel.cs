@@ -322,8 +322,13 @@ namespace AnnotationOpenSource.Shell
            // {
                 Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width + SelectedRegion.X), (int)(SelectedRegion.Height + SelectedRegion.Y));
                 var clone = Images.Clone();
+            if (SystemSetting.RectColor == RectColor.Black)
+            {
                 clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
-                Bitmap bitmap = clone.ToBitmap();
+            }
+            else
+                clone.Rectangle(rect, new Scalar(255, 255, 255, 255), 3);
+            Bitmap bitmap = clone.ToBitmap();
                 StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
              //   SetAllModeFalse();
            // }

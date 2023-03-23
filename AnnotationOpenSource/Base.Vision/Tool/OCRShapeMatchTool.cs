@@ -47,7 +47,11 @@ namespace Base.Vision.Tool
         Mono,
         Color,
     }
-
+    public enum RectColor
+    {
+        White,
+        Black
+    }
     [Serializable]
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public class AnnotationToolConfig: BaseConfig
@@ -94,6 +98,9 @@ namespace Base.Vision.Tool
             get { return this._morphIteration.Between(1, 99); }
             set { SetProperty(ref this._morphIteration, value); }
         }
+        [DisplayName("Rect Color")]
+        [PropertyOrder(7)]
+        public RectColor RectColor { get; set; } = 0;
         [Browsable(false)]
         public string ModelLocation { get; set; } = @"C:\\Users\\jason.yap\\Desktop\\ODOCR\\saved_model";
 
@@ -491,7 +498,12 @@ namespace Base.Vision.Tool
                     biggestContourRect.Width = biggestContourRect.Width + (offset * 2);
                     biggestContourRect.Height = biggestContourRect.Height + (offset * 2);
 
-                    Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(0, 0, 255, 255), 3);
+                    if (config.RectColor == RectColor.Black)
+                    {
+                        Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(0, 0, 255, 255), 3);
+                    }
+                    else
+                        Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(255, 255, 255, 255), 3);
 
                     string outputchar = "A";
                     if (ReadyToInspect)
