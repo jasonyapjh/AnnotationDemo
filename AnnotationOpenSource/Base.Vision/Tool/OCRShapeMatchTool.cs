@@ -25,6 +25,8 @@ using Keras;
 //using Tensorflow;
 using Shape = Base.Vision.Shapes.Base.Shape;
 using Keras.Datasets;
+using Keras.Models;
+using Numpy;
 
 namespace Base.Vision.Tool
 {
@@ -111,8 +113,10 @@ namespace Base.Vision.Tool
         public int num_checker = 0;
         public string OcrAvailAlphabet = new string(("ABCDEFGHIJKLMNOPQRSTUVWXYZ").ToArray());
         public string OcrAvailNumber = new string(("1234567890").ToArray());
+        public string OcrDeepChar= new string(("0123456789ABCDEFGHKLMNUZ").ToArray());
         public string OutputString = "";
         public OpenCvSharp.Size ResizeFormat = new OpenCvSharp.Size(150, 150);
+        public Keras.Models.BaseModel BaseModel = new Keras.Models.BaseModel();
         private void Config_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             ReadyToInspect = false;
@@ -696,7 +700,7 @@ namespace Base.Vision.Tool
 
 
 
-             var testkeras = Keras.Models.Model.LoadModel(@"C:\Users\jason.yap\Desktop\ODOCR\saved_model");
+            BaseModel = Keras.Models.Model.LoadModel(@"C:\Users\jason.yap\Desktop\ODOCR\saved_model");
            /* int batch_size = 1000;   //Size of the batches per epoch
             int num_classes = 10;    //We got 10 outputs since 
                                      //we can predict 10 different labels seen on the 
@@ -774,7 +778,7 @@ namespace Base.Vision.Tool
                 method: ContourApproximationModes.ApproxSimple);
             var orderedContours2 = contours2.OrderBy(c => Cv2.BoundingRect(c).Y).OrderBy(a => Cv2.BoundingRect(a).X).ToArray();
             string CharFormat = new string(config.OcrFormat.ToArray());
-
+            string DeepCharFormat = new string(OcrDeepChar.ToArray());
             FoundHullValue.Clear();
             Point[][] hull = new Point[13][];
             List<int> ResultHull = new List<int>();
@@ -810,9 +814,21 @@ namespace Base.Vision.Tool
                     biggestContourRect.Height = biggestContourRect.Height + (offset * 2);
                    // ObtainedRect.Add(new RectInfo(biggestContourRect.X, biggestContourRect.Y, biggestContourRect.Width, biggestContourRect.Height));
                     Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(0, 0, 255, 255), 3);
-                    
-               
 
+                    Mat croppedChar = new Mat(image, biggestContourRect);
+                    croppedChar = croppedChar.Resize(new OpenCvSharp.Size(100, 100));
+                    //Mat reshaped = croppedChar.Reshape(0, new int[] { 1, 100, 100, 1 });
+                    //var graymat = croppedChar.CvtColor(ColorConversionCodes.BGR2GRAY);
+                    croppedChar.GetArray(out byte[] plainArray); //there it is, c# array for nparray constructor
+                    NDarray nDarray = np.array(plainArray, dtype: np.uint8); //party party
+                    nDarray.resize(new Numpy.Models.Shape(100,100));
+                    nDarray = nDarray / 255;
+                    nDarray = np.expand_dims(nDarray, 0);
+                                        
+                    var result = BaseModel.Predict(nDarray);
+                    //List<int> testres = new List<int>();
+                    var output = np.argmax(result).asscalar<int>();
+                    string testres = DeepCharFormat[output].ToString();
                     double[] huMoments = new double[7];
                  //   RunResult.ResultOutput.Add(new MatInfo(resizedImage, "", "ROI_2 " + i.ToString()));
 
