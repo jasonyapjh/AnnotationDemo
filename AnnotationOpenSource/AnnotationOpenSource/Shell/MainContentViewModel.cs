@@ -42,9 +42,9 @@ namespace AnnotationOpenSource.Shell
 {
     public class MainContentViewModel : BaseViewModel
     {
-        private OCRShapeMatchConfig _configuration;
+        private AnnotationToolConfig _configuration;
 
-        public OCRShapeMatchConfig Configuration
+        public AnnotationToolConfig SystemSetting
         {
             get { return _configuration; }
             set { SetProperty(ref _configuration, value); }
@@ -100,8 +100,9 @@ namespace AnnotationOpenSource.Shell
 
         public OCRShapeMatchTool OCRTool;
         private int CharCount = 0;
-
+       // public AnnotationToolConfig SystemSetting;
         private string FileDirectory = "";
+        public string SystemSettingLoc = "";
         public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService) : base(containerExtension, eventAggregator, regionManager, dialogService)
         {
             ClickProductionCommand = new DelegateCommand<object>(OnClickProductionCommand);
@@ -124,10 +125,9 @@ namespace AnnotationOpenSource.Shell
             ClickDecreaseWidthCommand = new DelegateCommand<object>(OnDecWidthCommand);
             ClickIncreaseHeightCommand = new DelegateCommand<object>(OnIncHeightCommand);
             ClickDecreaseHeightCommand = new DelegateCommand<object>(OnDecHeightCommand);
-            Configuration = new OCRShapeMatchConfig();
+           // Configuration = new AnnotationToolConfig();
             EnableRegionCollection = new ObservableCollection<EnableRegionCollector>();
-            Configuration = new OCRShapeMatchConfig();
-            OCRTool = new OCRShapeMatchTool(Configuration);
+          
             DisplayCollection = new ObservableCollection<DisplayObject>();
             FileBox = new ObservableCollection<FileCollector>();
           /*  FileBox.Add(new FileCollector("test") { Done = true });
@@ -137,6 +137,26 @@ namespace AnnotationOpenSource.Shell
             NumberBox = new ObservableCollection<string>() { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
             //ImageBorder = new Image();
             IsTrain = true;
+
+            string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
+            Directory.CreateDirectory(config_directory);
+
+            SystemSettingLoc = string.Format("{0}\\{1}", config_directory, "SystemSetting.Config");
+
+            if (Extension.CheckFileExist(SystemSettingLoc))
+            {
+                SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
+            }
+            else
+            {
+                SystemSetting = new AnnotationToolConfig();
+              
+                Serializer.XmlSave(SystemSetting, SystemSettingLoc);
+
+           
+            }
+
+            OCRTool = new OCRShapeMatchTool(SystemSetting);
         }
         #region Shape adjustment
         private void OnDecHeightCommand(object obj)
@@ -338,9 +358,10 @@ namespace AnnotationOpenSource.Shell
         }
         private void OnClickRunCommand(object obj)
         {
-           
-            //Images = new Mat(SelectedFile.FileName);
 
+            //Images = new Mat(SelectedFile.FileName);
+          //  var t1 = @"D:\OldMachine\EImage\OCR\Bright\train\210420_051826_1.jpg";
+           // Images = new Mat(t1, ImreadModes.Unchanged);
             if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
@@ -363,9 +384,10 @@ namespace AnnotationOpenSource.Shell
 
         private void OnTeachCommand(object obj)
         {
-           /* var config = new AnnotationConfig();
-            CurrectImageDir = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Testing.xml";
-            Serializer.XmlSave(config, CurrectImageDir);*/
+            Serializer.XmlSave(SystemSetting, SystemSettingLoc);
+            /* var config = new AnnotationConfig();
+             CurrectImageDir = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Testing.xml";
+             Serializer.XmlSave(config, CurrectImageDir);*/
             /* CharCount = 0;
              EnableRegionCollection.Clear();
            
@@ -459,44 +481,47 @@ namespace AnnotationOpenSource.Shell
             set 
             { 
                 SetProperty(ref m_selectedfile, value);
-                Images = new Mat(SelectedFile.FileName, ImreadModes.Unchanged);
-                if (Images.Width != 0 || Images.Height != 0)
+                if (value != null)
                 {
-                    Bitmap bitmap = Images.ToBitmap();
-                    StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
-
-                    var file = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
-                    if (Extension.CheckFileExist(file))
+                    Images = new Mat(SelectedFile.FileName, ImreadModes.Unchanged);
+                    if (Images.Width != 0 || Images.Height != 0)
                     {
-                        EnableRegionCollection.Clear();
-                        var config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file);
-                        if (config.folder == "train")
-                        {
-                            IsTrain = true;
-                            IsTest = false;
-                            IsValid = false;
-                        }
-                        else if (config.folder == "test")
-                        {
-                            IsTrain = false;
-                            IsTest = true;
-                            IsValid = false;
-                        }
-                        else
-                        {
-                            IsTrain = false;
-                            IsTest = false;
-                            IsValid = true;
-                        }
-                        foreach (var item in config.objects)
-                        {
+                        Bitmap bitmap = Images.ToBitmap();
+                        StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
 
-                            EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(item.bndbox.xmin, item.bndbox.ymin, (item.bndbox.xmax - item.bndbox.xmin), (item.bndbox.ymax - item.bndbox.ymin), item.name)));
+                        var file = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
+                        if (Extension.CheckFileExist(file))
+                        {
+                            EnableRegionCollection.Clear();
+                            var config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file);
+                            if (config.folder == "train")
+                            {
+                                IsTrain = true;
+                                IsTest = false;
+                                IsValid = false;
+                            }
+                            else if (config.folder == "test")
+                            {
+                                IsTrain = false;
+                                IsTest = true;
+                                IsValid = false;
+                            }
+                            else
+                            {
+                                IsTrain = false;
+                                IsTest = false;
+                                IsValid = true;
+                            }
+                            foreach (var item in config.objects)
+                            {
+
+                                EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(item.bndbox.xmin, item.bndbox.ymin, (item.bndbox.xmax - item.bndbox.xmin), (item.bndbox.ymax - item.bndbox.ymin), item.name)));
+                            }
                         }
                     }
+                    else
+                        System.Windows.MessageBox.Show("File is corrupted!");
                 }
-                else
-                    System.Windows.MessageBox.Show("File is corrupted!");
             }
         }
         private int m_selectedfileindex;

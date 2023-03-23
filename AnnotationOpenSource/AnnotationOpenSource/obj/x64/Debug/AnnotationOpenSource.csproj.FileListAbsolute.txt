@@ -171,6 +171,7 @@ C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOp
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\bin\x64\Debug\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.csproj.AssemblyReference.cache
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.csproj.SuggestedBindingRedirects.cache
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\AnnotationOpenSource.exe.config
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\MainWindow.g.cs
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\Shell\MainContent.g.cs
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\AnnotationOpenSource\obj\x64\Debug\Shell\Shell.g.cs
