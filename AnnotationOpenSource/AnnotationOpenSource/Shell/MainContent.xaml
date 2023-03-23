@@ -372,7 +372,7 @@
                                      ScrollViewer.VerticalScrollBarVisibility="Visible" ItemsSource="{Binding DisplayCollection, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedDisplay}"/>
                             </Grid>
                             <Grid Grid.Row="1">
-                                <xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding Configuration}" PropertyNameLeftPadding="10"/>
+                                <xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding SystemSetting}" PropertyNameLeftPadding="10"/>
                             </Grid>
                         </Grid>
                     </TabItem>
@@ -398,7 +398,7 @@
             <Button Grid.Column="0" Content="OpenFolder" Foreground="Black" Command="{Binding ClickFileCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"/>
             <Button Grid.Column="2" Content="Train Tool" Foreground="Black" Command="{Binding ClickProductionCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2">
             </Button>
-            <Button Grid.Column="4" Content="Test2" Foreground="Black" Command="{Binding ClickTeachCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2">
+            <Button Grid.Column="4" Content="Save Config" Foreground="Black" Command="{Binding ClickTeachCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2">
             </Button>
             <Button Grid.Column="6" Content="Run" Foreground="Black" Command="{Binding ClickRunCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2">
             </Button>
