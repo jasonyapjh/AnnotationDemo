@@ -95,8 +95,8 @@ namespace AnnotationOpenSource.Shell
         public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
         public ObservableCollection<DisplayObject> DisplayCollection { get; private set; }
         public ObservableCollection<string> CharBox { get; private set; }
-        public ObservableCollection<string> NumberBox { get; private set; }
         public ObservableCollection<FileCollector> FileBox { get; private set; }
+        public ObservableCollection<LabelCount> LabelCounter { get; private set; }
 
         public OCRShapeMatchTool OCRTool;
         private int CharCount = 0;
@@ -130,12 +130,9 @@ namespace AnnotationOpenSource.Shell
           
             DisplayCollection = new ObservableCollection<DisplayObject>();
             FileBox = new ObservableCollection<FileCollector>();
-          /*  FileBox.Add(new FileCollector("test") { Done = true });
-            FileBox.Add(new FileCollector("test1") { Done = false });
-            FileBox.Add(new FileCollector("test2") { Done = true });*/
-            CharBox = new ObservableCollection<string>() { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J","K", "L", "M","N", "O","P","Q","R","S", "T","U","V","W","X","Y","Z" };
-            NumberBox = new ObservableCollection<string>() { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-            //ImageBorder = new Image();
+
+            CharBox = new ObservableCollection<string>();
+            LabelCounter = new ObservableCollection<LabelCount>();
             IsTrain = true;
 
             string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
@@ -246,6 +243,18 @@ namespace AnnotationOpenSource.Shell
             {
                 // Start --> object
                 config.objects.Add(new Objects() { name = item.Key, bndbox = new BoundingBox((int)item.X, (int)item.Y, (int)(item.X + item.Width), (int)(item.Y + item.Height)) });
+
+                if (LabelCounter.Any(x => x.Label == item.Key))
+                {
+                    var c = LabelCounter.Where(x => x.Label == item.Key);
+
+                    c.FirstOrDefault<LabelCount>().Count++;
+                }
+                else
+                {
+                    LabelCounter.Add(new LabelCount(item.Key, 1));
+                    CharBox.Add(item.Key);
+                }
             }
 
             Serializer.XmlSave(config, FileDirectory);
@@ -280,6 +289,7 @@ namespace AnnotationOpenSource.Shell
 
                 TotalImage = 0;
                 ProcessImage++;
+                LabelCounter.Clear();
                 for (int j = 0; j < SuppCount; j++)
                 {
                     string[] files = Directory.GetFiles(filename, supportedFileExt[j], SearchOption.AllDirectories);
@@ -295,6 +305,24 @@ namespace AnnotationOpenSource.Shell
                             {
                                 FileBox.Add(new FileCollector(files[i].ToString()) { Done = true });
                                 ProcessImage++;
+                                using (AnnotationConfig config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file))
+                                {
+                                    foreach(var item in config.objects)
+                                    {
+                                        if (LabelCounter.Any(x => x.Label == item.name))
+                                        {
+                                            var c = LabelCounter.Where(x => x.Label == item.name);
+
+                                            c.FirstOrDefault<LabelCount>().Count++;
+                                        }
+                                        else
+                                        {
+                                            LabelCounter.Add(new LabelCount(item.name, 1));
+                                            CharBox.Add(item.name);
+                                        }
+                                    }
+                                }
+                                
                             }
                             else
                                 FileBox.Add(new FileCollector(files[i].ToString()));
@@ -318,10 +346,10 @@ namespace AnnotationOpenSource.Shell
         }
         private void UpdateRectangle()
         {
-           // if (SetXDone && SetYDone && SetWidthDone && SetHeightDone)
-           // {
-                Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width + SelectedRegion.X), (int)(SelectedRegion.Height + SelectedRegion.Y));
-                var clone = Images.Clone();
+            // if (SetXDone && SetYDone && SetWidthDone && SetHeightDone)
+            // {
+            Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width + SelectedRegion.X), (int)(SelectedRegion.Height + SelectedRegion.Y));
+            var clone = Images.Clone();
             if (SystemSetting.RectColor == RectColor.Black)
             {
                 clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
@@ -329,10 +357,10 @@ namespace AnnotationOpenSource.Shell
             else
                 clone.Rectangle(rect, new Scalar(255, 255, 255, 255), 3);
             Bitmap bitmap = clone.ToBitmap();
-                StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
-             //   SetAllModeFalse();
-           // }
-       
+            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+            //   SetAllModeFalse();
+            // }
+
         }
         private void RunInspection()
         {
@@ -459,6 +487,28 @@ namespace AnnotationOpenSource.Shell
              public double Width { get; set; }
              public double Height { get; set; }
          }*/
+        #region Label count
+        public class LabelCount : BindableBase
+        {
+            private string _label;
+            private int _count;
+            public string Label
+            {
+                get { return this._label; }
+                set { SetProperty(ref _label, value); }
+            }
+            public int Count
+            {
+                get { return this._count; }
+                set { SetProperty(ref _count, value); }
+            }
+            public LabelCount(string a, int i)
+            {
+                this.Label = a;
+                this.Count = i;
+            }
+        }
+        #endregion
         #region FileBox
         public class FileCollector : BindableBase
         {
@@ -778,71 +828,7 @@ namespace AnnotationOpenSource.Shell
                 }
             }
         }
-      /*  public double RectWidth
-        {
-            get { return _rectWidth; }
-            set
-            {
-               // if (value.Equals(_rectWidth)) return;
-                SetProperty(ref this._rectWidth, value);
-                if(SelectedRegion!=null)
-                {
-                    SelectedRegion.Width = value / HorizontalRes;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.Width= value / HorizontalRes;
-                    SetWidthDone = true;
-                    //UpdateRectangle();
-                }
-            }
-        }
-        public double RectHeight
-        {
-            get { return _rectHeight; }
-            set
-            {
-              //  if (value.Equals(_rectHeight)) return;
-                SetProperty(ref this._rectHeight, value);
-                if (SelectedRegion != null)
-                {
-                    SelectedRegion.Height = value / VerticalRes;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.Height = value/VerticalRes;
-                    SetHeightDone = true;
-                   // UpdateRectangle();
-                }
-            }
-        }
-        public double RectX
-        {
-            get { return _rectX; }
-            set
-            {
-                //if (value.Equals(_rectX)) return;
-                SetProperty(ref this._rectX, value);
-                if (SelectedRegion != null)
-                {
-                    SelectedRegion.X = value / HorizontalRes;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.TLX = value / HorizontalRes;
-                    SetXDone = true;
-                 //   UpdateRectangle();
-                }
-            }
-        }
-
-        public double RectY
-        {
-            get { return _rectY; }
-            set
-            {
-             //   if (value.Equals(_rectY)) return;
-                SetProperty(ref this._rectY, value);
-                if (SelectedRegion != null)
-                {
-                    SelectedRegion.Y = value / VerticalRes;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.TLY = value / VerticalRes;
-                    SetYDone = true;
-                    UpdateRectangle();
-                }
-            }
-        }*/
+    
 
         public double PanelX
         {

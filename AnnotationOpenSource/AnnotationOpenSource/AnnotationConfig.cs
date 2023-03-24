@@ -12,7 +12,7 @@ namespace AnnotationOpenSource
     [Serializable]
     [TypeConverter(typeof(ExpandableObjectConverter))]
     [XmlRoot("annotation")]
-    public class AnnotationConfig
+    public class AnnotationConfig : IDisposable
     {
         public string folder { get; set; } = "";
         public string filename { get; set; } = "";
@@ -34,6 +34,11 @@ namespace AnnotationOpenSource
         public int segmented { get; set; } = 0;
         [XmlElement("object", Type = typeof(Objects))]
         public List<Objects> objects { get; set; }
+
+        public void Dispose()
+        {
+           
+        }
     }
 
     [Serializable]
