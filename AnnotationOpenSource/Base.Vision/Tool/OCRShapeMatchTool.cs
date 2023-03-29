@@ -475,7 +475,7 @@ namespace Base.Vision.Tool
             OutputString = "";
 
             Mat DisplayImage = image.Clone();
-
+            OutputString = "";
             for (int i = 0; i < orderedContours2.Length; i++)
             {
                 var biggestContourRect = Cv2.BoundingRect(orderedContours2[i]);
@@ -504,13 +504,17 @@ namespace Base.Vision.Tool
                     }
                     else
                         Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(255, 255, 255, 255), 3);
-
+                   
                     string outputchar = "A";
                     if (ReadyToInspect)
                     {
 
 
                         Mat croppedChar = new Mat(image, biggestContourRect);
+                        Mat inverse = new Mat();
+                        Cv2.BitwiseNot(croppedChar, inverse);
+                        RunResult.ResultOutput.Add(new MatInfo(inverse, "", "inverse"));
+                        croppedChar = inverse;
                         croppedChar = croppedChar.Resize(new OpenCvSharp.Size(100, 100));
                         //Mat reshaped = croppedChar.Reshape(0, new int[] { 1, 100, 100, 1 });
                         //var graymat = croppedChar.CvtColor(ColorConversionCodes.BGR2GRAY);
@@ -523,12 +527,19 @@ namespace Base.Vision.Tool
                         var result = BaseModel.Predict(nDarray);
                         var output = np.argmax(result).asscalar<int>();
                         outputchar = DeepCharFormat[output].ToString();
+                        OutputString = OutputString + outputchar;
                     }
-                    
+                 
                     RunResult.ResultOutputRect.Add(new RectInfo(biggestContourRect.X, biggestContourRect.Y, biggestContourRect.Width, biggestContourRect.Height, outputchar));
 
                 }
             }
+            string test = OutputString.Insert(9, "-");
+            if (CheckSum.SEMI_CheckSum(test))
+                RunResult.Result = Result.Pass;
+            else
+                RunResult.Result = Result.Fail;
+
             RunResult.ResultOutput.Add(new MatInfo(DisplayImage, "", "Found"));
             //RunResult.ResultOutputRect = ObtainedRect;
             RunResult.ResultTuple = OutputString;

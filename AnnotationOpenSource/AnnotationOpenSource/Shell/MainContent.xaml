@@ -153,7 +153,12 @@
 
             </ListBox>
             <Grid Grid.Row="1" Grid.Column="0">
-                <Button Grid.Column="2" Content="Delete Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Delete Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2"/>
+                <Button Grid.Column="1" Content="Remove Corrupted Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2"/>
             </Grid>
             <const:ZoomBorder Grid.Column="1" x:Name="border" ClipToBounds="True" Background="Gray">
                 <Image Name="ImageBorder"  Source="{Binding StationAWindow}" Stretch="Uniform"  UseLayoutRounding="True" SnapsToDevicePixels="True" VerticalAlignment="Top" MB:SizeObserver.Observe="True" 
@@ -384,7 +389,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Label : " TextAlignment="Center" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="1" ItemsSource="{Binding CharBox}" Width="100" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="14" VerticalAlignment="Center" Padding="0" SelectedItem="{Binding SelectedChar}" Margin="0,0,0,0" />
+                                    <ComboBox Grid.Column="1" ItemsSource="{Binding CharBox}" Foreground="Black" Width="100" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="14" VerticalAlignment="Center" Padding="0" SelectedItem="{Binding SelectedChar}" Margin="0,0,0,0" />
                                 </Grid>
                                 <!--xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding Configuration}" PropertyNameLeftPadding="10"/-->
                                 <Grid Grid.Row="2">

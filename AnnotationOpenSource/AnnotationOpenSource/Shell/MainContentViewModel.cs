@@ -37,6 +37,7 @@ using System.Xml;
 using System.Data.SqlTypes;
 using System.Windows.Media.Media3D;
 using Base.ConfigServer;
+using static Tensorflow.Keras.Engine.InputSpec;
 
 namespace AnnotationOpenSource.Shell
 {
@@ -89,7 +90,7 @@ namespace AnnotationOpenSource.Shell
         public DelegateCommand<object> ClickDecreaseWidthCommand { get; set; }
         public DelegateCommand<object> ClickIncreaseHeightCommand { get; set; }
         public DelegateCommand<object> ClickDecreaseHeightCommand { get; set; }
-
+        public DelegateCommand<object> ClickRemoveCorruptImageCommand { get; set; }
 
 
         public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
@@ -125,7 +126,8 @@ namespace AnnotationOpenSource.Shell
             ClickDecreaseWidthCommand = new DelegateCommand<object>(OnDecWidthCommand);
             ClickIncreaseHeightCommand = new DelegateCommand<object>(OnIncHeightCommand);
             ClickDecreaseHeightCommand = new DelegateCommand<object>(OnDecHeightCommand);
-           // Configuration = new AnnotationToolConfig();
+            ClickRemoveCorruptImageCommand = new DelegateCommand<object>(OnRemoveCorruptedImage);
+            // Configuration = new AnnotationToolConfig();
             EnableRegionCollection = new ObservableCollection<EnableRegionCollector>();
           
             DisplayCollection = new ObservableCollection<DisplayObject>();
@@ -154,6 +156,25 @@ namespace AnnotationOpenSource.Shell
             }
 
             OCRTool = new OCRShapeMatchTool(SystemSetting);
+        }
+
+        private void OnRemoveCorruptedImage(object obj)
+        {
+            foreach(var item in FileBox)
+            {
+                Images = new Mat(item.FileName, ImreadModes.Unchanged);
+                if (Images.Width == 0 || Images.Height == 0)
+                {
+                    var str = SelectedFile.FileName;
+                    SelectedFileIndex++;
+                    FileBox.RemoveAt(SelectedFileIndex - 1);
+                    File.Delete(str);
+                    //SelectedFileIndex++;
+                    TotalImage--;
+                }
+            }
+            System.Windows.MessageBox.Show("Scan Completed!");
+
         }
         #region Shape adjustment
         private void OnDecHeightCommand(object obj)
@@ -335,14 +356,15 @@ namespace AnnotationOpenSource.Shell
 
         private void OnNextBox(object obj)
         {
-            var check = EnableRegionCollection;
-            SelectedRegion = EnableRegionCollection[CharCount];
-            Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width+ SelectedRegion.X) , (int)(SelectedRegion.Height+ SelectedRegion.Y));
-            var clone = Images.Clone();
-            clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
-            Bitmap bitmap = clone.ToBitmap();
-            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
-            CharCount++;
+            /* var check = EnableRegionCollection;
+             SelectedRegion = EnableRegionCollection[CharCount];
+             Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width+ SelectedRegion.X) , (int)(SelectedRegion.Height+ SelectedRegion.Y));
+             var clone = Images.Clone();
+             clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
+             Bitmap bitmap = clone.ToBitmap();
+             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+             CharCount++;*/
+            SelectedFileIndex++;
         }
         private void UpdateRectangle()
         {
@@ -369,7 +391,8 @@ namespace AnnotationOpenSource.Shell
                 System.Windows.MessageBox.Show("File is corrupted!");
                 return;
             }
-                
+
+            bool AutoCreate = false;
             if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
@@ -385,17 +408,38 @@ namespace AnnotationOpenSource.Shell
                     EnableRegionCollection.Add(new EnableRegionCollector(item));
                 }
                 //EnableRegionCollection = test.ResultOutputRect;
+                if (test.Result == Result.Pass)
+                    AutoCreate = true;
             }
             Bitmap bitmap = DisplayCollection[DisplayCollection.Count - 1].MatObjects.ToBitmap();
             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+
+            // Auto
+            if(AutoCreate)
+            {
+                foreach (var item in EnableRegionCollection.ToList())
+                {
+                    if (LabelCounter.Any(x => x.Label == item.Key))
+                    {
+                        var c = LabelCounter.Where(x => x.Label == item.Key);
+                        if(c.FirstOrDefault<LabelCount>().Count >152)
+                        {
+                            EnableRegionCollection.Remove(item);
+                        }
+                    }
+                
+                }
+            }
+
+            //
         }
         private void OnClickRunCommand(object obj)
         {
 
             //Images = new Mat(SelectedFile.FileName);
-          //  var t1 = @"D:\OldMachine\EImage\OCR\Bright\train\210420_051826_1.jpg";
-           // Images = new Mat(t1, ImreadModes.Unchanged);
-            if (OCRTool.Run(Images, out InspectionData test))
+            //  var t1 = @"D:\OldMachine\EImage\OCR\Bright\train\210420_051826_1.jpg";
+            // Images = new Mat(t1, ImreadModes.Unchanged);
+            /*if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
                 //EnableRegionCollection.Clear();
@@ -412,7 +456,8 @@ namespace AnnotationOpenSource.Shell
                 //EnableRegionCollection = test.ResultOutputRect;
             }
             Bitmap bitmap = DisplayCollection[DisplayCollection.Count - 1].MatObjects.ToBitmap();
-            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);*/
+            RunInspection();
         }
 
         private void OnTeachCommand(object obj)
