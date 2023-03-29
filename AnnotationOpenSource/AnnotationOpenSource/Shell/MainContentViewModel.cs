@@ -160,7 +160,7 @@ namespace AnnotationOpenSource.Shell
 
         private void OnRemoveCorruptedImage(object obj)
         {
-            foreach(var item in FileBox)
+            foreach(var item in FileBox.ToList())
             {
                 Images = new Mat(item.FileName, ImreadModes.Unchanged);
                 if (Images.Width == 0 || Images.Height == 0)
@@ -169,7 +169,7 @@ namespace AnnotationOpenSource.Shell
                     SelectedFileIndex++;
                     FileBox.RemoveAt(SelectedFileIndex - 1);
                     File.Delete(str);
-                    //SelectedFileIndex++;
+                   
                     TotalImage--;
                 }
             }
@@ -435,29 +435,55 @@ namespace AnnotationOpenSource.Shell
         }
         private void OnClickRunCommand(object obj)
         {
-
-            //Images = new Mat(SelectedFile.FileName);
-            //  var t1 = @"D:\OldMachine\EImage\OCR\Bright\train\210420_051826_1.jpg";
-            // Images = new Mat(t1, ImreadModes.Unchanged);
-            /*if (OCRTool.Run(Images, out InspectionData test))
+            LabelCounter.Clear();
+            string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
+            foreach (var file in FileBox)
             {
-                DisplayCollection.Clear();
-                //EnableRegionCollection.Clear();
-                for (int i = 0; i < test.ResultOutput.Count; i++)
+                if (file.Done)
                 {
-                    DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
+                    var fileXml = System.IO.Path.ChangeExtension(file.FileName.ToString(), ".xml");
+
+                    if (Extension.CheckFileExist(fileXml))
+                    {
+                        using (AnnotationConfig config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), fileXml))
+                        {
+                            Mat image = new Mat(config.path, ImreadModes.Unchanged);
+
+                            foreach (var item in config.objects)
+                            {
+                                if (LabelCounter.Any(x => x.Label == item.name))
+                                {
+                                    var c = LabelCounter.Where(x => x.Label == item.name);
+
+                                    c.FirstOrDefault<LabelCount>().Count++;
+
+                                    var shape = Rect.FromLTRB(item.bndbox.xmin, item.bndbox.ymin, item.bndbox.xmax, item.bndbox.ymax);
+                                    Mat cropped = new Mat(image, shape);
+
+                                    string folderpath = $"{folderDirectory}/{item.name}";
+                                    string savefile = string.Format("{0}\\{1}\\{2}_{3}.jpg", folderDirectory, item.name, item.name, c.FirstOrDefault<LabelCount>().Count);
+                                    cropped.ImWrite(savefile);
+                                }
+                                else
+                                {
+                                    string folderpath = $"{folderDirectory}/{item.name}";
+                                    Extension.CreateFolder(folderpath);
+                                    LabelCounter.Add(new LabelCount(item.name, 1));
+                                    var shape = Rect.FromLTRB(item.bndbox.xmin, item.bndbox.ymin, item.bndbox.xmax, item.bndbox.ymax);
+                                    Mat cropped = new Mat(image, shape);
+
+                                    string savefile = string.Format("{0}\\{1}\\{2}_{3}.jpg", folderDirectory, item.name, item.name, 1);
+                                    cropped.ImWrite(savefile);
+                                    
+                                }
+                            }
+                        }
+
+                    }
                 }
-                OCRResult = test.ResultTuple;
-                EnableRegionCollection.Clear();
-                foreach (var item in test.ResultOutputRect)
-                {
-                    EnableRegionCollection.Add(new EnableRegionCollector(item));
-                }
-                //EnableRegionCollection = test.ResultOutputRect;
             }
-            Bitmap bitmap = DisplayCollection[DisplayCollection.Count - 1].MatObjects.ToBitmap();
-            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);*/
-            RunInspection();
+            System.Windows.MessageBox.Show("Done Creation!");
+            //  RunInspection();
         }
 
         private void OnTeachCommand(object obj)
@@ -792,6 +818,7 @@ namespace AnnotationOpenSource.Shell
         private bool m_IsTest;
         private bool m_IsValid;
         public string TrainMode = "";
+      
         public bool IsTrain
         {
             get { return m_IsTrain; }

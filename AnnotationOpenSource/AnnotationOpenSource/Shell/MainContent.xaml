@@ -157,8 +157,8 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Content="Delete Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2"/>
-                <Button Grid.Column="1" Content="Remove Corrupted Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2"/>
+                <Button Grid.Column="0" Content="Delete Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" />
+                <Button Grid.Column="1" Content="Remove Corrupted Image" Foreground="Black" Command="{Binding ClickRemoveCorruptImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"/>
             </Grid>
             <const:ZoomBorder Grid.Column="1" x:Name="border" ClipToBounds="True" Background="Gray">
                 <Image Name="ImageBorder"  Source="{Binding StationAWindow}" Stretch="Uniform"  UseLayoutRounding="True" SnapsToDevicePixels="True" VerticalAlignment="Top" MB:SizeObserver.Observe="True" 
