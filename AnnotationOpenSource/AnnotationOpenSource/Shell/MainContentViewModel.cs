@@ -38,6 +38,7 @@ using System.Data.SqlTypes;
 using System.Windows.Media.Media3D;
 using Base.ConfigServer;
 using static Tensorflow.Keras.Engine.InputSpec;
+using System.Threading;
 
 namespace AnnotationOpenSource.Shell
 {
@@ -91,19 +92,20 @@ namespace AnnotationOpenSource.Shell
         public DelegateCommand<object> ClickIncreaseHeightCommand { get; set; }
         public DelegateCommand<object> ClickDecreaseHeightCommand { get; set; }
         public DelegateCommand<object> ClickRemoveCorruptImageCommand { get; set; }
-
-
+        public DelegateCommand<object> ClickRunAsynCommand { get; set; }
+        public DelegateCommand<object> ClickStopRunAsynCommand { get; set; }
         public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
         public ObservableCollection<DisplayObject> DisplayCollection { get; private set; }
         public ObservableCollection<string> CharBox { get; private set; }
         public ObservableCollection<FileCollector> FileBox { get; private set; }
         public ObservableCollection<LabelCount> LabelCounter { get; private set; }
-
+        private static readonly object lock_RunAsyn = new object();
         public OCRShapeMatchTool OCRTool;
         private int CharCount = 0;
        // public AnnotationToolConfig SystemSetting;
         private string FileDirectory = "";
         public string SystemSettingLoc = "";
+        public Thread RunAsynThread { get; private set; }
         public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService) : base(containerExtension, eventAggregator, regionManager, dialogService)
         {
             ClickProductionCommand = new DelegateCommand<object>(OnClickProductionCommand);
@@ -127,6 +129,8 @@ namespace AnnotationOpenSource.Shell
             ClickIncreaseHeightCommand = new DelegateCommand<object>(OnIncHeightCommand);
             ClickDecreaseHeightCommand = new DelegateCommand<object>(OnDecHeightCommand);
             ClickRemoveCorruptImageCommand = new DelegateCommand<object>(OnRemoveCorruptedImage);
+            ClickRunAsynCommand = new DelegateCommand<object>(OnRunAsyn);
+            ClickStopRunAsynCommand = new DelegateCommand<object>(OnStopRunAsyn);
             // Configuration = new AnnotationToolConfig();
             EnableRegionCollection = new ObservableCollection<EnableRegionCollector>();
           
@@ -156,8 +160,50 @@ namespace AnnotationOpenSource.Shell
             }
 
             OCRTool = new OCRShapeMatchTool(SystemSetting);
+         
         }
 
+        private void OnStopRunAsyn(object obj)
+        {
+            RunAsynThread.Abort();
+        }
+
+        private void OnRunAsyn(object obj)
+        {
+          //  lock_RunAsyn = new object();
+            RunAsynThread = new Thread(RunAsyn);
+            RunAsynThread.Start();
+        }
+
+        public void RunAsyn()
+        {
+            bool lockTaken = false;
+            int counter = FileBox.Count();
+            try
+            {
+                Monitor.TryEnter(lock_RunAsyn, ref lockTaken);
+                if(lockTaken)
+                {
+                    if (RunInspection())
+                    {
+                        CreateAnnotations();
+                        ProcessImage++;
+                        if (SelectedFileIndex <= counter)
+                        {
+                            SelectedFileIndex++;
+                        }
+                        else
+                            RunAsynThread.Abort();
+                        
+                        
+                    }
+                    else
+                        RunAsynThread.Abort();
+
+                }
+            }
+            catch (Exception ex) { System.Windows.Forms.MessageBox.Show(Extension.GetDetailMessage(ex)); }
+        }
         private void OnRemoveCorruptedImage(object obj)
         {
             foreach(var item in FileBox.ToList())
@@ -244,7 +290,47 @@ namespace AnnotationOpenSource.Shell
         {
             EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(40, 40, 40, 40, "A")));
         }
+        private void CreateAnnotations()
+        {
+            FileDirectory = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
 
+            var config = new AnnotationConfig();
+
+            config.folder = TrainMode;
+            config.filename = System.IO.Path.GetFileName(SelectedFile.FileName);
+            config.path = SelectedFile.FileName;
+            config.size.width = Images.Width;
+            config.size.height = Images.Height;
+            config.size.depth = Images.Channels();
+
+            // Add rect here
+
+            foreach (var item in EnableRegionCollection)
+            {
+                // Start --> object
+                config.objects.Add(new Objects() { name = item.Key, bndbox = new BoundingBox((int)item.X, (int)item.Y, (int)(item.X + item.Width), (int)(item.Y + item.Height)) });
+
+                if (LabelCounter.Any(x => x.Label == item.Key))
+                {
+                    var c = LabelCounter.Where(x => x.Label == item.Key);
+
+                    c.FirstOrDefault<LabelCount>().Count++;
+                }
+                else
+                {
+                    LabelCounter.Add(new LabelCount(item.Key, 1));
+                    CharBox.Add(item.Key);
+                }
+            }
+
+            Serializer.XmlSave(config, FileDirectory);
+
+
+            if (Extension.CheckFileExist(FileDirectory))
+            {
+                SelectedFile.Done = true;
+            }
+        }
         private void OnCreateAnnotations(object obj)
         {
             FileDirectory = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
@@ -384,12 +470,12 @@ namespace AnnotationOpenSource.Shell
             // }
 
         }
-        private void RunInspection()
+        private bool RunInspection()
         {
             if(Images.Width==0 || Images.Height==0)
             {
                 System.Windows.MessageBox.Show("File is corrupted!");
-                return;
+                return false;
             }
 
             bool AutoCreate = false;
@@ -415,27 +501,28 @@ namespace AnnotationOpenSource.Shell
             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
 
             // Auto
-            if(AutoCreate)
-            {
-                foreach (var item in EnableRegionCollection.ToList())
-                {
-                    if (LabelCounter.Any(x => x.Label == item.Key))
-                    {
-                        var c = LabelCounter.Where(x => x.Label == item.Key);
-                        if(c.FirstOrDefault<LabelCount>().Count >152)
-                        {
-                            EnableRegionCollection.Remove(item);
-                        }
-                    }
-                
-                }
-            }
+            /* if(AutoCreate)
+             {
+                 foreach (var item in EnableRegionCollection.ToList())
+                 {
+                     if (LabelCounter.Any(x => x.Label == item.Key))
+                     {
+                         var c = LabelCounter.Where(x => x.Label == item.Key);
+                         if(c.FirstOrDefault<LabelCount>().Count >152)
+                         {
+                             EnableRegionCollection.Remove(item);
+                         }
+                     }
 
+                 }
+             }
+            */
             //
+            return AutoCreate;
         }
         private void OnClickRunCommand(object obj)
         {
-            LabelCounter.Clear();
+            /*LabelCounter.Clear();
             string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
             foreach (var file in FileBox)
             {
@@ -482,8 +569,8 @@ namespace AnnotationOpenSource.Shell
                     }
                 }
             }
-            System.Windows.MessageBox.Show("Done Creation!");
-            //  RunInspection();
+            System.Windows.MessageBox.Show("Done Creation!");*/
+              RunInspection();
         }
 
         private void OnTeachCommand(object obj)
