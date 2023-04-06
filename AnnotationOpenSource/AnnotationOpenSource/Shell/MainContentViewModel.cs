@@ -40,6 +40,11 @@ using Base.ConfigServer;
 using static Tensorflow.Keras.Engine.InputSpec;
 using System.Threading;
 using System.Reflection;
+using Base.Sequence.Framework;
+using Serilog.Core;
+using static Tensorflow.ApiDef.Types;
+using Tensorflow.Util;
+using Base.Sequence;
 
 namespace AnnotationOpenSource.Shell
 {
@@ -106,12 +111,15 @@ namespace AnnotationOpenSource.Shell
        // public AnnotationToolConfig SystemSetting;
         private string FileDirectory = "";
         public string SystemSettingLoc = "";
-        public Thread RunAsynThread { get; private set; }
+
         public BackgroundWorker BGWorker;
         public bool InspAsyn = false;
         public bool InspDone = false;
+        private ISeqEngine m_SeqEngine;
         //public bool BGDone = false;
-        public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService) : base(containerExtension, eventAggregator, regionManager, dialogService)
+        private static object m_SyncObj = new object();
+        private int counter = 0;
+        public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService, ISeqEngine seqEngine) : base(containerExtension, eventAggregator, regionManager, dialogService)
         {
             ClickProductionCommand = new DelegateCommand<object>(OnClickProductionCommand);
             ClickTeachCommand = new DelegateCommand<object>(OnTeachCommand);
@@ -145,32 +153,99 @@ namespace AnnotationOpenSource.Shell
             CharBox = new ObservableCollection<string>();
             LabelCounter = new ObservableCollection<LabelCount>();
             IsTrain = true;
+            m_SeqEngine = seqEngine;
+            m_SeqEngine.SeqCallBack(new EventHandler(OnSeqEvent));
 
-            string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
-            Directory.CreateDirectory(config_directory);
+            m_SeqEngine.BeginMainSeq();
 
-            SystemSettingLoc = string.Format("{0}\\{1}", config_directory, "SystemSetting.Config");
+            SystemSetting = Containers.Resolve<AnnotationToolConfig>();
+            /*   string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
+               Directory.CreateDirectory(config_directory);
 
-            if (Extension.CheckFileExist(SystemSettingLoc))
+               SystemSettingLoc = string.Format("{0}\\{1}", config_directory, "SystemSetting.Config");
+
+               if (Extension.CheckFileExist(SystemSettingLoc))
+               {
+                   SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
+               }
+               else
+               {
+                   SystemSetting = new AnnotationToolConfig();
+
+                   Serializer.XmlSave(SystemSetting, SystemSettingLoc);
+
+
+               }*/
+
+            // OCRTool = new OCRShapeMatchTool(SystemSetting);
+            /*  BGWorker = new BackgroundWorker();
+              BGWorker.DoWork += backgroundWorker1_DoWork;
+              BGWorker.WorkerSupportsCancellation = true;
+              BGWorker.RunWorkerCompleted += BGWorker_RunWorkerCompleted;*/
+
+        }
+
+        private void OnSeqEvent(object sender, EventArgs args)
+        {
+            lock (m_SyncObj)
             {
-                SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
-            }
-            else
-            {
-                SystemSetting = new AnnotationToolConfig();
-              
-                Serializer.XmlSave(SystemSetting, SystemSettingLoc);
+                if (args is ImageInspectedEventArgs)
+                {
+                    ImageInspectedEventArgs evArg = (ImageInspectedEventArgs)args;
 
-           
-            }
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        switch (evArg.Seq_ID)
+                        {
+                            case 0:
+                                DisplayCollection.Clear();
+                                //EnableRegionCollection.Clear();
+                                for (int i = 0; i < evArg.InspectionData.ResultOutput.Count; i++)
+                                {
+                                    DisplayCollection.Add(new DisplayObject(evArg.InspectionData.ResultOutput[i].Description, evArg.InspectionData.ResultOutput[i].MatObject, evArg.InspectionData.ResultOutput[i].Color));
+                                }
+                                OCRResult = evArg.InspectionData.ResultTuple;
+                                EnableRegionCollection.Clear();
+                                foreach (var item in evArg.InspectionData.ResultOutputRect)
+                                {
+                                    EnableRegionCollection.Add(new EnableRegionCollector(item));
+                                }
+                                if (evArg.InspectionData.Result == Result.Pass)
+                                {
+                                    CreateAnnotations();
+                                    ProcessImage++;
+                                    if (SelectedFileIndex <= counter)
+                                    {
+                                        SelectedFileIndex++;
+                                    }
+                                    else
+                                    {
+                                        System.Windows.Forms.MessageBox.Show("Insp Done");
+                                    }
+                                }
+                                else
+                                {
+                                    System.Windows.Forms.MessageBox.Show("Insp Fail");
+                                }
+                                break;
+                        }
+                    });
+                }
+                else if (args is ImageRequestEventArgs)
+                {
+                    ImageRequestEventArgs evArg = (ImageRequestEventArgs)args;
 
-            OCRTool = new OCRShapeMatchTool(SystemSetting);
-            BGWorker = new BackgroundWorker();
-            BGWorker.DoWork += backgroundWorker1_DoWork;
-            BGWorker.WorkerSupportsCancellation = true;
-            BGWorker.RunWorkerCompleted += BGWorker_RunWorkerCompleted;
-         //   BGWorker.ProgressChanged += backgroundWorker1_ProgressChanged;
-         //   BGWorker.WorkerReportsProgress = true;
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        switch (evArg.Seq_ID)
+                        {
+                            case 0:
+                                m_SeqEngine.SendMatImage(evArg.Seq_ID, Images);
+                                break;
+                        }
+                    });
+                }
+            }
         }
 
         private void BGWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -184,7 +259,7 @@ namespace AnnotationOpenSource.Shell
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-            int counter = FileBox.Count();
+         
             //            RunAsyn();
             try
             {
@@ -233,30 +308,22 @@ namespace AnnotationOpenSource.Shell
 
         private void OnStopRunAsyn(object obj)
         {
-            //   RunAsynThread.Abort();
-            BGWorker.CancelAsync();
+            
+           // BGWorker.CancelAsync();
             InspAsyn = false;
-
+            m_SeqEngine.EndMachineLot(true);
         }
 
         private void OnRunAsyn(object obj)
         {
-            //  lock_RunAsyn = new object();
-            //   RunAsynThread = new Thread(RunAsyn);
-            //  RunAsynThread.Start();
-          //  BGDone = true;
-          //  while (!BGWorker.CancellationPending)
-          //  {
-          //      if (BGDone)
-         //       {
-                    InspAsyn = true;
-                    InspDone = true;
-        //            BGDone = false;
-                    BGWorker.RunWorkerAsync();
-                    //Thread.Sleep(500);
-          //      }
-             
-         //   }
+
+             InspAsyn = true;
+            //  InspDone = true;
+
+            // BGWorker.RunWorkerAsync();
+         
+            m_SeqEngine.SeqSingleTrigger(0);
+            m_SeqEngine.SendMatImage(0, Images);
         }
 
         public void RunAsyn()
@@ -469,7 +536,7 @@ namespace AnnotationOpenSource.Shell
 
             SelectedFileIndex++;
             ProcessImage++;
-            RunInspection();
+         //   RunInspection();
         }
 
         private void OnOpenFile(object obj)
@@ -533,6 +600,7 @@ namespace AnnotationOpenSource.Shell
                     }
                 }
             }
+            counter = FileBox.Count();
         }
 
         private void OnNextBox(object obj)
@@ -595,24 +663,7 @@ namespace AnnotationOpenSource.Shell
             Bitmap bitmap = DisplayCollection[DisplayCollection.Count - 1].MatObjects.ToBitmap();
             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
 
-            // Auto
-            /* if(AutoCreate)
-             {
-                 foreach (var item in EnableRegionCollection.ToList())
-                 {
-                     if (LabelCounter.Any(x => x.Label == item.Key))
-                     {
-                         var c = LabelCounter.Where(x => x.Label == item.Key);
-                         if(c.FirstOrDefault<LabelCount>().Count >152)
-                         {
-                             EnableRegionCollection.Remove(item);
-                         }
-                     }
-
-                 }
-             }
-            */
-            //
+           
             return AutoCreate;
         }
         private void OnClickRunCommand(object obj)
@@ -671,30 +722,6 @@ namespace AnnotationOpenSource.Shell
         private void OnTeachCommand(object obj)
         {
             Serializer.XmlSave(SystemSetting, SystemSettingLoc);
-            /* var config = new AnnotationConfig();
-             CurrectImageDir = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Testing.xml";
-             Serializer.XmlSave(config, CurrectImageDir);*/
-            /* CharCount = 0;
-             EnableRegionCollection.Clear();
-           
-             Images = new Mat(CurrectImageDir);
-             if (OCRTool.Run(Images, out InspectionData test))
-             {
-                 DisplayCollection.Clear();
-                 //EnableRegionCollection.Clear();
-                 for (int i = 0; i < test.ResultOutput.Count; i++)
-                 {
-                     DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
-                 }
-                 OCRResult = test.ResultTuple;
-                 foreach(var item in test.ResultOutputRect)
-                 {
-                     EnableRegionCollection.Add(new EnableRegionCollector(item));
-                 }
-                 //EnableRegionCollection = test.ResultOutputRect;
-             }
-             Bitmap bitmap = DisplayCollection[DisplayCollection.Count-1].MatObjects.ToBitmap();
-             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);*/
         }
 
         private void OnPreviewMouseMove(object obj)
@@ -718,8 +745,8 @@ namespace AnnotationOpenSource.Shell
 
         private void OnClickProductionCommand(object obj)
         {
-
-            if (OCRTool.Setup(out InspectionData test))
+            m_SeqEngine.SeqLoadModel(0);
+           /* if (OCRTool.Setup(out InspectionData test))
             {
                 DisplayCollection.Clear();
                 EnableRegionCollection.Clear();
@@ -729,7 +756,7 @@ namespace AnnotationOpenSource.Shell
                 }
                 OCRResult = test.ResultTuple;
                 //EnableRegionCollection.Add(new EnableRegionCollector("OCR Rect", new RectItem() { X = 10, Y = 10, Width = 30, Height = 30 }));
-            }
+            }*/
         
         }
 
@@ -787,7 +814,8 @@ namespace AnnotationOpenSource.Shell
         {
             get { return this.m_selectedfile; }
             set 
-            { 
+            {
+                bool Exists = false;
                 SetProperty(ref m_selectedfile, value);
                 if (value != null)
                 {
@@ -800,6 +828,7 @@ namespace AnnotationOpenSource.Shell
                         var file = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
                         if (Extension.CheckFileExist(file))
                         {
+                            Exists = true;
                             EnableRegionCollection.Clear();
                             var config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file);
                             if (config.folder == "train")
@@ -830,12 +859,19 @@ namespace AnnotationOpenSource.Shell
                     else
                         System.Windows.MessageBox.Show("File is corrupted!");
                 }
-               // if(InspAsyn)
-               // {
-                 //   InspDone = false;
-                //    RunAsyn();
-                 //   InspDone = true;
-                //}
+                if(InspAsyn && !Exists)
+                {
+                    //m_SeqEngine.SendMatImage(0, Images);
+                    m_SeqEngine.SeqSingleTrigger(0);
+                  
+                    //   InspDone = false;
+                    //    RunAsyn();
+                    //   InspDone = true;
+                }
+                else if(InspAsyn && Exists)
+                {
+                    SelectedFileIndex++;
+                }
             }
         }
         private int m_selectedfileindex;
