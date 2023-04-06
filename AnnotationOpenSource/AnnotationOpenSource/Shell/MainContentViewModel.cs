@@ -37,14 +37,22 @@ using System.Xml;
 using System.Data.SqlTypes;
 using System.Windows.Media.Media3D;
 using Base.ConfigServer;
+using static Tensorflow.Keras.Engine.InputSpec;
+using System.Threading;
+using System.Reflection;
+using Base.Sequence.Framework;
+using Serilog.Core;
+using static Tensorflow.ApiDef.Types;
+using Tensorflow.Util;
+using Base.Sequence;
 
 namespace AnnotationOpenSource.Shell
 {
     public class MainContentViewModel : BaseViewModel
     {
-        private OCRShapeMatchConfig _configuration;
+        private AnnotationToolConfig _configuration;
 
-        public OCRShapeMatchConfig Configuration
+        public AnnotationToolConfig SystemSetting
         {
             get { return _configuration; }
             set { SetProperty(ref _configuration, value); }
@@ -89,20 +97,29 @@ namespace AnnotationOpenSource.Shell
         public DelegateCommand<object> ClickDecreaseWidthCommand { get; set; }
         public DelegateCommand<object> ClickIncreaseHeightCommand { get; set; }
         public DelegateCommand<object> ClickDecreaseHeightCommand { get; set; }
-
-
-
+        public DelegateCommand<object> ClickRemoveCorruptImageCommand { get; set; }
+        public DelegateCommand<object> ClickRunAsynCommand { get; set; }
+        public DelegateCommand<object> ClickStopRunAsynCommand { get; set; }
         public ObservableCollection<EnableRegionCollector> EnableRegionCollection { get; set; }
         public ObservableCollection<DisplayObject> DisplayCollection { get; private set; }
         public ObservableCollection<string> CharBox { get; private set; }
-        public ObservableCollection<string> NumberBox { get; private set; }
         public ObservableCollection<FileCollector> FileBox { get; private set; }
-
+        public ObservableCollection<LabelCount> LabelCounter { get; private set; }
+        private static readonly object lock_RunAsyn = new object();
         public OCRShapeMatchTool OCRTool;
         private int CharCount = 0;
-
+       // public AnnotationToolConfig SystemSetting;
         private string FileDirectory = "";
-        public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService) : base(containerExtension, eventAggregator, regionManager, dialogService)
+        public string SystemSettingLoc = "";
+
+        public BackgroundWorker BGWorker;
+        public bool InspAsyn = false;
+        public bool InspDone = false;
+        private ISeqEngine m_SeqEngine;
+        //public bool BGDone = false;
+        private static object m_SyncObj = new object();
+        private int counter = 0;
+        public MainContentViewModel(IContainerExtension containerExtension, IEventAggregator eventAggregator, IRegionManager regionManager, IDialogService dialogService, ISeqEngine seqEngine) : base(containerExtension, eventAggregator, regionManager, dialogService)
         {
             ClickProductionCommand = new DelegateCommand<object>(OnClickProductionCommand);
             ClickTeachCommand = new DelegateCommand<object>(OnTeachCommand);
@@ -124,21 +141,250 @@ namespace AnnotationOpenSource.Shell
             ClickDecreaseWidthCommand = new DelegateCommand<object>(OnDecWidthCommand);
             ClickIncreaseHeightCommand = new DelegateCommand<object>(OnIncHeightCommand);
             ClickDecreaseHeightCommand = new DelegateCommand<object>(OnDecHeightCommand);
-            Configuration = new OCRShapeMatchConfig();
+            ClickRemoveCorruptImageCommand = new DelegateCommand<object>(OnRemoveCorruptedImage);
+            ClickRunAsynCommand = new DelegateCommand<object>(OnRunAsyn);
+            ClickStopRunAsynCommand = new DelegateCommand<object>(OnStopRunAsyn);
+            // Configuration = new AnnotationToolConfig();
             EnableRegionCollection = new ObservableCollection<EnableRegionCollector>();
-            Configuration = new OCRShapeMatchConfig();
-            OCRTool = new OCRShapeMatchTool(Configuration);
+          
             DisplayCollection = new ObservableCollection<DisplayObject>();
             FileBox = new ObservableCollection<FileCollector>();
-          /*  FileBox.Add(new FileCollector("test") { Done = true });
-            FileBox.Add(new FileCollector("test1") { Done = false });
-            FileBox.Add(new FileCollector("test2") { Done = true });*/
-            CharBox = new ObservableCollection<string>() { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J","K", "L", "M","N", "O","P","Q","R","S", "T","U","V","W","X","Y","Z" };
-            NumberBox = new ObservableCollection<string>() { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-            //ImageBorder = new Image();
+
+            CharBox = new ObservableCollection<string>();
+            LabelCounter = new ObservableCollection<LabelCount>();
             IsTrain = true;
+            m_SeqEngine = seqEngine;
+            m_SeqEngine.SeqCallBack(new EventHandler(OnSeqEvent));
+
+            m_SeqEngine.BeginMainSeq();
+
+            SystemSetting = Containers.Resolve<AnnotationToolConfig>();
+            /*   string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
+               Directory.CreateDirectory(config_directory);
+
+               SystemSettingLoc = string.Format("{0}\\{1}", config_directory, "SystemSetting.Config");
+
+               if (Extension.CheckFileExist(SystemSettingLoc))
+               {
+                   SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
+               }
+               else
+               {
+                   SystemSetting = new AnnotationToolConfig();
+
+                   Serializer.XmlSave(SystemSetting, SystemSettingLoc);
+
+
+               }*/
+
+            // OCRTool = new OCRShapeMatchTool(SystemSetting);
+            /*  BGWorker = new BackgroundWorker();
+              BGWorker.DoWork += backgroundWorker1_DoWork;
+              BGWorker.WorkerSupportsCancellation = true;
+              BGWorker.RunWorkerCompleted += BGWorker_RunWorkerCompleted;*/
+
         }
 
+        private void OnSeqEvent(object sender, EventArgs args)
+        {
+            lock (m_SyncObj)
+            {
+                if (args is ImageInspectedEventArgs)
+                {
+                    ImageInspectedEventArgs evArg = (ImageInspectedEventArgs)args;
+
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        switch (evArg.Seq_ID)
+                        {
+                            case 0:
+                                DisplayCollection.Clear();
+                                //EnableRegionCollection.Clear();
+                                for (int i = 0; i < evArg.InspectionData.ResultOutput.Count; i++)
+                                {
+                                    DisplayCollection.Add(new DisplayObject(evArg.InspectionData.ResultOutput[i].Description, evArg.InspectionData.ResultOutput[i].MatObject, evArg.InspectionData.ResultOutput[i].Color));
+                                }
+                                OCRResult = evArg.InspectionData.ResultTuple;
+                                EnableRegionCollection.Clear();
+                                foreach (var item in evArg.InspectionData.ResultOutputRect)
+                                {
+                                    EnableRegionCollection.Add(new EnableRegionCollector(item));
+                                }
+                                if (evArg.InspectionData.Result == Result.Pass)
+                                {
+                                    CreateAnnotations();
+                                    ProcessImage++;
+                                    if (SelectedFileIndex <= counter)
+                                    {
+                                        SelectedFileIndex++;
+                                    }
+                                    else
+                                    {
+                                        System.Windows.Forms.MessageBox.Show("Insp Done");
+                                    }
+                                }
+                                else
+                                {
+                                    System.Windows.Forms.MessageBox.Show("Insp Fail");
+                                }
+                                break;
+                        }
+                    });
+                }
+                else if (args is ImageRequestEventArgs)
+                {
+                    ImageRequestEventArgs evArg = (ImageRequestEventArgs)args;
+
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        switch (evArg.Seq_ID)
+                        {
+                            case 0:
+                                m_SeqEngine.SendMatImage(evArg.Seq_ID, Images);
+                                break;
+                        }
+                    });
+                }
+            }
+        }
+
+        private void BGWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            // BGDone = true;
+            if ((SelectedFileIndex <= FileBox.Count()) && InspDone)
+            {
+                BGWorker.RunWorkerAsync();
+            }
+        }
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+         
+            //            RunAsyn();
+            try
+            {
+                if (InspDone)
+                {
+                    InspDone = false;
+                    /*  if (SelectedFileIndex <= counter)
+                      {
+                          SelectedFileIndex++;
+                      }*/
+                    App.Current.Dispatcher.Invoke(new Action(() =>
+                        {
+                            if (RunInspection())
+                            {
+                                CreateAnnotations();
+                                ProcessImage++;
+                                if (SelectedFileIndex <= counter)
+                                {
+                                    SelectedFileIndex++;
+                                }
+                                else
+                                {
+                                    InspAsyn = false;
+                                    BGWorker.CancelAsync();
+                                    System.Windows.Forms.MessageBox.Show("Insp Done");
+                                }
+                                // RunAsynThread.Abort();
+
+                                InspDone = true;
+                            }
+                            else
+                            {
+
+                                InspAsyn = false;
+                                BGWorker.CancelAsync();
+                                System.Windows.Forms.MessageBox.Show("Insp Fail");
+                            }
+
+
+                        }));
+
+                }
+            }
+            catch (Exception ex) { System.Windows.Forms.MessageBox.Show(Extension.GetDetailMessage(ex)); }
+        }
+
+        private void OnStopRunAsyn(object obj)
+        {
+            
+           // BGWorker.CancelAsync();
+            InspAsyn = false;
+            m_SeqEngine.EndMachineLot(true);
+        }
+
+        private void OnRunAsyn(object obj)
+        {
+
+             InspAsyn = true;
+            //  InspDone = true;
+
+            // BGWorker.RunWorkerAsync();
+         
+            m_SeqEngine.SeqSingleTrigger(0);
+            m_SeqEngine.SendMatImage(0, Images);
+        }
+
+        public void RunAsyn()
+        {
+            bool lockTaken = false;
+            int counter = FileBox.Count();
+            try
+            {
+                Monitor.TryEnter(lock_RunAsyn, ref lockTaken);
+                if(lockTaken)
+                {
+                    if (RunInspection())
+                    {
+                        CreateAnnotations();
+                        ProcessImage++;
+                        if (SelectedFileIndex <= counter)
+                        {
+                            SelectedFileIndex++;
+                        }
+                        else
+                        {
+                            InspAsyn = false;
+                            BGWorker.CancelAsync();
+                            System.Windows.Forms.MessageBox.Show("Insp Done");
+                        }
+                        // RunAsynThread.Abort();
+
+                        InspDone = true;
+                    }
+                    else
+                    {
+                        InspDone = false;
+                        InspAsyn = false;
+                        BGWorker.CancelAsync();
+                        System.Windows.Forms.MessageBox.Show("Insp Fail");
+                    }
+                    //RunAsynThread.Abort();
+                    
+                }
+            }
+            catch (Exception ex) { System.Windows.Forms.MessageBox.Show(Extension.GetDetailMessage(ex)); }
+        }
+        private void OnRemoveCorruptedImage(object obj)
+        {
+            foreach(var item in FileBox.ToList())
+            {
+                Images = new Mat(item.FileName, ImreadModes.Unchanged);
+                if (Images.Width == 0 || Images.Height == 0)
+                {
+                    var str = item.FileName;
+                    SelectedFileIndex++;
+                    FileBox.RemoveAt(SelectedFileIndex - 1);
+                    File.Delete(str);
+                   
+                    TotalImage--;
+                }
+            }
+            System.Windows.MessageBox.Show("Scan Completed!");
+
+        }
+        #region Shape adjustment
         private void OnDecHeightCommand(object obj)
         {
             SelectedRegion.Height--;
@@ -186,7 +432,7 @@ namespace AnnotationOpenSource.Shell
             SelectedRegion.Y--;
             UpdateRectangle();
         }
-
+        #endregion
         private void OnDeleteImage(object obj)
         {
             var str = SelectedFile.FileName;
@@ -206,7 +452,47 @@ namespace AnnotationOpenSource.Shell
         {
             EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(40, 40, 40, 40, "A")));
         }
+        private void CreateAnnotations()
+        {
+            FileDirectory = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
 
+            var config = new AnnotationConfig();
+
+            config.folder = TrainMode;
+            config.filename = System.IO.Path.GetFileName(SelectedFile.FileName);
+            config.path = SelectedFile.FileName;
+            config.size.width = Images.Width;
+            config.size.height = Images.Height;
+            config.size.depth = Images.Channels();
+
+            // Add rect here
+
+            foreach (var item in EnableRegionCollection)
+            {
+                // Start --> object
+                config.objects.Add(new Objects() { name = item.Key, bndbox = new BoundingBox((int)item.X, (int)item.Y, (int)(item.X + item.Width), (int)(item.Y + item.Height)) });
+
+                if (LabelCounter.Any(x => x.Label == item.Key))
+                {
+                    var c = LabelCounter.Where(x => x.Label == item.Key);
+
+                    c.FirstOrDefault<LabelCount>().Count++;
+                }
+                else
+                {
+                    LabelCounter.Add(new LabelCount(item.Key, 1));
+                    CharBox.Add(item.Key);
+                }
+            }
+
+            Serializer.XmlSave(config, FileDirectory);
+
+
+            if (Extension.CheckFileExist(FileDirectory))
+            {
+                SelectedFile.Done = true;
+            }
+        }
         private void OnCreateAnnotations(object obj)
         {
             FileDirectory = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
@@ -226,6 +512,18 @@ namespace AnnotationOpenSource.Shell
             {
                 // Start --> object
                 config.objects.Add(new Objects() { name = item.Key, bndbox = new BoundingBox((int)item.X, (int)item.Y, (int)(item.X + item.Width), (int)(item.Y + item.Height)) });
+
+                if (LabelCounter.Any(x => x.Label == item.Key))
+                {
+                    var c = LabelCounter.Where(x => x.Label == item.Key);
+
+                    c.FirstOrDefault<LabelCount>().Count++;
+                }
+                else
+                {
+                    LabelCounter.Add(new LabelCount(item.Key, 1));
+                    CharBox.Add(item.Key);
+                }
             }
 
             Serializer.XmlSave(config, FileDirectory);
@@ -238,7 +536,7 @@ namespace AnnotationOpenSource.Shell
 
             SelectedFileIndex++;
             ProcessImage++;
-            RunInspection();
+         //   RunInspection();
         }
 
         private void OnOpenFile(object obj)
@@ -251,6 +549,8 @@ namespace AnnotationOpenSource.Shell
             }
             if (filename != null)
             {
+               // SelectedFile = null;
+                //SelectedFileIndex = 0;
                 FileBox.Clear();
                 string[] supportedFileExt = new string[] { "*.jpg", "*.tiff", "*.tif", "*.gif", "*.bmp", "*.jpeg", "*.png" };
 
@@ -258,6 +558,7 @@ namespace AnnotationOpenSource.Shell
 
                 TotalImage = 0;
                 ProcessImage++;
+                LabelCounter.Clear();
                 for (int j = 0; j < SuppCount; j++)
                 {
                     string[] files = Directory.GetFiles(filename, supportedFileExt[j], SearchOption.AllDirectories);
@@ -273,6 +574,24 @@ namespace AnnotationOpenSource.Shell
                             {
                                 FileBox.Add(new FileCollector(files[i].ToString()) { Done = true });
                                 ProcessImage++;
+                                using (AnnotationConfig config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file))
+                                {
+                                    foreach(var item in config.objects)
+                                    {
+                                        if (LabelCounter.Any(x => x.Label == item.name))
+                                        {
+                                            var c = LabelCounter.Where(x => x.Label == item.name);
+
+                                            c.FirstOrDefault<LabelCount>().Count++;
+                                        }
+                                        else
+                                        {
+                                            LabelCounter.Add(new LabelCount(item.name, 1));
+                                            CharBox.Add(item.name);
+                                        }
+                                    }
+                                }
+                                
                             }
                             else
                                 FileBox.Add(new FileCollector(files[i].ToString()));
@@ -281,40 +600,48 @@ namespace AnnotationOpenSource.Shell
                     }
                 }
             }
+            counter = FileBox.Count();
         }
 
         private void OnNextBox(object obj)
         {
-            var check = EnableRegionCollection;
-            SelectedRegion = EnableRegionCollection[CharCount];
-            Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width+ SelectedRegion.X) , (int)(SelectedRegion.Height+ SelectedRegion.Y));
-            var clone = Images.Clone();
-            clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
-            Bitmap bitmap = clone.ToBitmap();
-            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
-            CharCount++;
+            /* var check = EnableRegionCollection;
+             SelectedRegion = EnableRegionCollection[CharCount];
+             Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width+ SelectedRegion.X) , (int)(SelectedRegion.Height+ SelectedRegion.Y));
+             var clone = Images.Clone();
+             clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
+             Bitmap bitmap = clone.ToBitmap();
+             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+             CharCount++;*/
+            SelectedFileIndex++;
         }
         private void UpdateRectangle()
         {
-           // if (SetXDone && SetYDone && SetWidthDone && SetHeightDone)
-           // {
-                Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width + SelectedRegion.X), (int)(SelectedRegion.Height + SelectedRegion.Y));
-                var clone = Images.Clone();
+            // if (SetXDone && SetYDone && SetWidthDone && SetHeightDone)
+            // {
+            Rect rect = Rect.FromLTRB((int)SelectedRegion.X, (int)SelectedRegion.Y, (int)(SelectedRegion.Width + SelectedRegion.X), (int)(SelectedRegion.Height + SelectedRegion.Y));
+            var clone = Images.Clone();
+            if (SystemSetting.RectColor == RectColor.Black)
+            {
                 clone.Rectangle(rect, new Scalar(0, 0, 255, 255), 3);
-                Bitmap bitmap = clone.ToBitmap();
-                StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
-             //   SetAllModeFalse();
-           // }
-       
+            }
+            else
+                clone.Rectangle(rect, new Scalar(255, 255, 255, 255), 3);
+            Bitmap bitmap = clone.ToBitmap();
+            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+            //   SetAllModeFalse();
+            // }
+
         }
-        private void RunInspection()
+        private bool RunInspection()
         {
             if(Images.Width==0 || Images.Height==0)
             {
                 System.Windows.MessageBox.Show("File is corrupted!");
-                return;
+                return false;
             }
-                
+
+            bool AutoCreate = false;
             if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
@@ -330,61 +657,71 @@ namespace AnnotationOpenSource.Shell
                     EnableRegionCollection.Add(new EnableRegionCollector(item));
                 }
                 //EnableRegionCollection = test.ResultOutputRect;
+                if (test.Result == Result.Pass)
+                    AutoCreate = true;
             }
             Bitmap bitmap = DisplayCollection[DisplayCollection.Count - 1].MatObjects.ToBitmap();
             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+
+           
+            return AutoCreate;
         }
         private void OnClickRunCommand(object obj)
         {
-           
-            //Images = new Mat(SelectedFile.FileName);
-
-            if (OCRTool.Run(Images, out InspectionData test))
+            /*LabelCounter.Clear();
+            string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
+            foreach (var file in FileBox)
             {
-                DisplayCollection.Clear();
-                //EnableRegionCollection.Clear();
-                for (int i = 0; i < test.ResultOutput.Count; i++)
+                if (file.Done)
                 {
-                    DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
+                    var fileXml = System.IO.Path.ChangeExtension(file.FileName.ToString(), ".xml");
+
+                    if (Extension.CheckFileExist(fileXml))
+                    {
+                        using (AnnotationConfig config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), fileXml))
+                        {
+                            Mat image = new Mat(config.path, ImreadModes.Unchanged);
+
+                            foreach (var item in config.objects)
+                            {
+                                if (LabelCounter.Any(x => x.Label == item.name))
+                                {
+                                    var c = LabelCounter.Where(x => x.Label == item.name);
+
+                                    c.FirstOrDefault<LabelCount>().Count++;
+
+                                    var shape = Rect.FromLTRB(item.bndbox.xmin, item.bndbox.ymin, item.bndbox.xmax, item.bndbox.ymax);
+                                    Mat cropped = new Mat(image, shape);
+
+                                    string folderpath = $"{folderDirectory}/{item.name}";
+                                    string savefile = string.Format("{0}\\{1}\\{2}_{3}.jpg", folderDirectory, item.name, item.name, c.FirstOrDefault<LabelCount>().Count);
+                                    cropped.ImWrite(savefile);
+                                }
+                                else
+                                {
+                                    string folderpath = $"{folderDirectory}/{item.name}";
+                                    Extension.CreateFolder(folderpath);
+                                    LabelCounter.Add(new LabelCount(item.name, 1));
+                                    var shape = Rect.FromLTRB(item.bndbox.xmin, item.bndbox.ymin, item.bndbox.xmax, item.bndbox.ymax);
+                                    Mat cropped = new Mat(image, shape);
+
+                                    string savefile = string.Format("{0}\\{1}\\{2}_{3}.jpg", folderDirectory, item.name, item.name, 1);
+                                    cropped.ImWrite(savefile);
+                                    
+                                }
+                            }
+                        }
+
+                    }
                 }
-                OCRResult = test.ResultTuple;
-                EnableRegionCollection.Clear();
-                foreach (var item in test.ResultOutputRect)
-                {
-                    EnableRegionCollection.Add(new EnableRegionCollector(item));
-                }
-                //EnableRegionCollection = test.ResultOutputRect;
             }
-            Bitmap bitmap = DisplayCollection[DisplayCollection.Count - 1].MatObjects.ToBitmap();
-            StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
+            System.Windows.MessageBox.Show("Done Creation!");*/
+              RunInspection();
         }
 
         private void OnTeachCommand(object obj)
         {
-           /* var config = new AnnotationConfig();
-            CurrectImageDir = @"C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Testing.xml";
-            Serializer.XmlSave(config, CurrectImageDir);*/
-            /* CharCount = 0;
-             EnableRegionCollection.Clear();
-           
-             Images = new Mat(CurrectImageDir);
-             if (OCRTool.Run(Images, out InspectionData test))
-             {
-                 DisplayCollection.Clear();
-                 //EnableRegionCollection.Clear();
-                 for (int i = 0; i < test.ResultOutput.Count; i++)
-                 {
-                     DisplayCollection.Add(new DisplayObject(test.ResultOutput[i].Description, test.ResultOutput[i].MatObject, test.ResultOutput[i].Color));
-                 }
-                 OCRResult = test.ResultTuple;
-                 foreach(var item in test.ResultOutputRect)
-                 {
-                     EnableRegionCollection.Add(new EnableRegionCollector(item));
-                 }
-                 //EnableRegionCollection = test.ResultOutputRect;
-             }
-             Bitmap bitmap = DisplayCollection[DisplayCollection.Count-1].MatObjects.ToBitmap();
-             StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);*/
+            Serializer.XmlSave(SystemSetting, SystemSettingLoc);
         }
 
         private void OnPreviewMouseMove(object obj)
@@ -408,8 +745,8 @@ namespace AnnotationOpenSource.Shell
 
         private void OnClickProductionCommand(object obj)
         {
-
-            if (OCRTool.Setup(out InspectionData test))
+            m_SeqEngine.SeqLoadModel(0);
+           /* if (OCRTool.Setup(out InspectionData test))
             {
                 DisplayCollection.Clear();
                 EnableRegionCollection.Clear();
@@ -419,7 +756,7 @@ namespace AnnotationOpenSource.Shell
                 }
                 OCRResult = test.ResultTuple;
                 //EnableRegionCollection.Add(new EnableRegionCollector("OCR Rect", new RectItem() { X = 10, Y = 10, Width = 30, Height = 30 }));
-            }
+            }*/
         
         }
 
@@ -430,6 +767,28 @@ namespace AnnotationOpenSource.Shell
              public double Width { get; set; }
              public double Height { get; set; }
          }*/
+        #region Label count
+        public class LabelCount : BindableBase
+        {
+            private string _label;
+            private int _count;
+            public string Label
+            {
+                get { return this._label; }
+                set { SetProperty(ref _label, value); }
+            }
+            public int Count
+            {
+                get { return this._count; }
+                set { SetProperty(ref _count, value); }
+            }
+            public LabelCount(string a, int i)
+            {
+                this.Label = a;
+                this.Count = i;
+            }
+        }
+        #endregion
         #region FileBox
         public class FileCollector : BindableBase
         {
@@ -455,46 +814,64 @@ namespace AnnotationOpenSource.Shell
         {
             get { return this.m_selectedfile; }
             set 
-            { 
+            {
+                bool Exists = false;
                 SetProperty(ref m_selectedfile, value);
-                Images = new Mat(SelectedFile.FileName, ImreadModes.Unchanged);
-                if (Images.Width != 0 || Images.Height != 0)
+                if (value != null)
                 {
-                    Bitmap bitmap = Images.ToBitmap();
-                    StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
-
-                    var file = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
-                    if (Extension.CheckFileExist(file))
+                    Images = new Mat(SelectedFile.FileName, ImreadModes.Unchanged);
+                    if (Images.Width != 0 || Images.Height != 0)
                     {
-                        EnableRegionCollection.Clear();
-                        var config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file);
-                        if (config.folder == "train")
-                        {
-                            IsTrain = true;
-                            IsTest = false;
-                            IsValid = false;
-                        }
-                        else if (config.folder == "test")
-                        {
-                            IsTrain = false;
-                            IsTest = true;
-                            IsValid = false;
-                        }
-                        else
-                        {
-                            IsTrain = false;
-                            IsTest = false;
-                            IsValid = true;
-                        }
-                        foreach (var item in config.objects)
-                        {
+                        Bitmap bitmap = Images.ToBitmap();
+                        StationAWindow = OpenCV.ConvertBitmapToBitmapSource(bitmap);
 
-                            EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(item.bndbox.xmin, item.bndbox.ymin, (item.bndbox.xmax - item.bndbox.xmin), (item.bndbox.ymax - item.bndbox.ymin), item.name)));
+                        var file = System.IO.Path.ChangeExtension(SelectedFile.FileName, ".xml");
+                        if (Extension.CheckFileExist(file))
+                        {
+                            Exists = true;
+                            EnableRegionCollection.Clear();
+                            var config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file);
+                            if (config.folder == "train")
+                            {
+                                IsTrain = true;
+                                IsTest = false;
+                                IsValid = false;
+                            }
+                            else if (config.folder == "test")
+                            {
+                                IsTrain = false;
+                                IsTest = true;
+                                IsValid = false;
+                            }
+                            else
+                            {
+                                IsTrain = false;
+                                IsTest = false;
+                                IsValid = true;
+                            }
+                            foreach (var item in config.objects)
+                            {
+
+                                EnableRegionCollection.Add(new EnableRegionCollector(new RectInfo(item.bndbox.xmin, item.bndbox.ymin, (item.bndbox.xmax - item.bndbox.xmin), (item.bndbox.ymax - item.bndbox.ymin), item.name)));
+                            }
                         }
                     }
+                    else
+                        System.Windows.MessageBox.Show("File is corrupted!");
                 }
-                else
-                    System.Windows.MessageBox.Show("File is corrupted!");
+                if(InspAsyn && !Exists)
+                {
+                    //m_SeqEngine.SendMatImage(0, Images);
+                    m_SeqEngine.SeqSingleTrigger(0);
+                  
+                    //   InspDone = false;
+                    //    RunAsyn();
+                    //   InspDone = true;
+                }
+                else if(InspAsyn && Exists)
+                {
+                    SelectedFileIndex++;
+                }
             }
         }
         private int m_selectedfileindex;
@@ -665,6 +1042,7 @@ namespace AnnotationOpenSource.Shell
         private bool m_IsTest;
         private bool m_IsValid;
         public string TrainMode = "";
+      
         public bool IsTrain
         {
             get { return m_IsTrain; }
@@ -746,71 +1124,7 @@ namespace AnnotationOpenSource.Shell
                 }
             }
         }
-      /*  public double RectWidth
-        {
-            get { return _rectWidth; }
-            set
-            {
-               // if (value.Equals(_rectWidth)) return;
-                SetProperty(ref this._rectWidth, value);
-                if(SelectedRegion!=null)
-                {
-                    SelectedRegion.Width = value / HorizontalRes;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.Width= value / HorizontalRes;
-                    SetWidthDone = true;
-                    //UpdateRectangle();
-                }
-            }
-        }
-        public double RectHeight
-        {
-            get { return _rectHeight; }
-            set
-            {
-              //  if (value.Equals(_rectHeight)) return;
-                SetProperty(ref this._rectHeight, value);
-                if (SelectedRegion != null)
-                {
-                    SelectedRegion.Height = value / VerticalRes;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.Height = value/VerticalRes;
-                    SetHeightDone = true;
-                   // UpdateRectangle();
-                }
-            }
-        }
-        public double RectX
-        {
-            get { return _rectX; }
-            set
-            {
-                //if (value.Equals(_rectX)) return;
-                SetProperty(ref this._rectX, value);
-                if (SelectedRegion != null)
-                {
-                    SelectedRegion.X = value / HorizontalRes;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.TLX = value / HorizontalRes;
-                    SetXDone = true;
-                 //   UpdateRectangle();
-                }
-            }
-        }
-
-        public double RectY
-        {
-            get { return _rectY; }
-            set
-            {
-             //   if (value.Equals(_rectY)) return;
-                SetProperty(ref this._rectY, value);
-                if (SelectedRegion != null)
-                {
-                    SelectedRegion.Y = value / VerticalRes;
-                    EnableRegionCollection[SelectedRegionIndex].Shape.TLY = value / VerticalRes;
-                    SetYDone = true;
-                    UpdateRectangle();
-                }
-            }
-        }*/
+    
 
         public double PanelX
         {

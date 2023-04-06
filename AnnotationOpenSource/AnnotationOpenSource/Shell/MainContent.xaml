@@ -123,6 +123,7 @@
             <RowDefinition Height="5*"/>
             <RowDefinition Height="5"/>
             <RowDefinition Height="0.58*"/>
+            <RowDefinition Height="0.58*"/>
         </Grid.RowDefinitions>
 
 
@@ -153,7 +154,12 @@
 
             </ListBox>
             <Grid Grid.Row="1" Grid.Column="0">
-                <Button Grid.Column="2" Content="Delete Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Delete Image" Foreground="Black" Command="{Binding ClickDeleteImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" />
+                <Button Grid.Column="1" Content="Remove Corrupted Image" Foreground="Black" Command="{Binding ClickRemoveCorruptImageCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"/>
             </Grid>
             <const:ZoomBorder Grid.Column="1" x:Name="border" ClipToBounds="True" Background="Gray">
                 <Image Name="ImageBorder"  Source="{Binding StationAWindow}" Stretch="Uniform"  UseLayoutRounding="True" SnapsToDevicePixels="True" VerticalAlignment="Top" MB:SizeObserver.Observe="True" 
@@ -261,13 +267,29 @@
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="0.5*"/>
                             </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="0.8*"/>
+                                <ColumnDefinition Width="0.4*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left">
+                                <DataGrid HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" AutoGenerateColumns="False" CanUserAddRows="False" ItemsSource="{Binding LabelCounter}" IsReadOnly="True" Foreground="Black"
+                                          CanUserResizeRows="True" HeadersVisibility="All" FontSize="18" FontFamily="Sora Regular" Padding="0" VerticalScrollBarVisibility="Visible">
+                                    <DataGrid.Columns>
+
+                                        <DataGridTextColumn Header="Label" Binding="{Binding Label, Mode=TwoWay}"/>
+                                        <DataGridTextColumn Header="Count" Binding="{Binding Count, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataGrid.Columns>
+
+                                </DataGrid>
+
+                            </Grid>
                             <Grid Grid.Row="0">
                                 <DataGrid AutoGenerateColumns="False" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Top" CanUserAddRows="False" ItemsSource="{Binding EnableRegionCollection}" 
                                           CanUserResizeRows="True" AreRowDetailsFrozen="True" HeadersVisibility="All" SelectedIndex="{Binding SelectedRegionIndex}" SelectedItem="{Binding SelectedRegion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           FontSize="18" FontFamily="Sora Regular" Padding="-1" VerticalScrollBarVisibility="Visible">
                                     <DataGrid.Columns>
 
-                                        <DataGridTextColumn Header="Shape" Binding="{Binding Key, Mode=TwoWay}">
+                                        <DataGridTextColumn Header="Label" Binding="{Binding Key, Mode=TwoWay}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Padding" Value="0"/>
@@ -280,8 +302,32 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="X" Binding="{Binding X, UpdateSourceTrigger=PropertyChanged}" />
-                                        <DataGridTextColumn Header="Y" Binding="{Binding Y, UpdateSourceTrigger=PropertyChanged}" />
+                                        <DataGridTextColumn Header="X" Binding="{Binding X, UpdateSourceTrigger=PropertyChanged}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Padding" Value="0"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                    <Setter Property="Margin" Value="15,0,0,0"/>
+                                                    <Setter Property="FontWeight" Value="Normal"/>
+                                                    <Setter Property="FontSize" Value="16"/>
+                                                    <Setter Property="Foreground" Value="Black"/>
+                                                    <Setter Property="KeyboardNavigation.AcceptsReturn" Value="True"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Y" Binding="{Binding Y, UpdateSourceTrigger=PropertyChanged}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Padding" Value="0"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                    <Setter Property="Margin" Value="15,0,0,0"/>
+                                                    <Setter Property="FontWeight" Value="Normal"/>
+                                                    <Setter Property="FontSize" Value="16"/>
+                                                    <Setter Property="Foreground" Value="Black"/>
+                                                    <Setter Property="KeyboardNavigation.AcceptsReturn" Value="True"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
                                         <DataGridTextColumn Header="Height" Binding="{Binding Height, UpdateSourceTrigger=PropertyChanged}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
@@ -310,7 +356,7 @@
                                 </DataGrid>
 
                             </Grid>
-                            <Grid Grid.Row="1">
+                            <Grid Grid.Row="1" Grid.ColumnSpan="2">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="2*"/>
                                     <RowDefinition Height="*"/>
@@ -329,22 +375,22 @@
                                         <RowDefinition Height="*"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <Button Grid.RowSpan="2" Grid.Column="0" Content="Left" Foreground="Black" Command="{Binding ClickLeftCommand}" Height="35"/>
-                                    <Button Grid.Column="1" Content="Up" Foreground="Black" Command="{Binding ClickUpCommand}" Height="35"/>
-                                    <Button Grid.Column="1" Grid.Row="1" Content="Down" Foreground="Black" Command="{Binding ClickDownCommand}" Height="35"/>
-                                    <Button Grid.RowSpan="2" Grid.Column="2" Content="Right" Foreground="Black" Command="{Binding ClickRightCommand}" Height="35"/>
-                                    <Button Grid.Column="4" Grid.Row="0" Content="Width++" Foreground="Black" Command="{Binding ClickIncreaseWidthCommand}" Height="35"/>
-                                    <Button Grid.Column="4" Grid.Row="1" Content="Width--" Foreground="Black" Command="{Binding ClickDecreaseWidthCommand}" Height="35"/>
-                                    <Button Grid.Column="5" Grid.Row="0" Content="Height++" Foreground="Black" Command="{Binding ClickIncreaseHeightCommand}" Height="35"/>
-                                    <Button Grid.Column="5" Grid.Row="1" Content="Height--" Foreground="Black" Command="{Binding ClickDecreaseHeightCommand}" Height="35"/>
+                                    <Button Grid.RowSpan="2" Grid.Column="0" Content="Left" Foreground="Black" Command="{Binding ClickLeftCommand}" Height="35" Width="50"/>
+                                    <Button Grid.Column="1" Content="Up" Foreground="Black" Command="{Binding ClickUpCommand}" Height="35" Width="50"/>
+                                    <Button Grid.Column="1" Grid.Row="1" Content="Down" Foreground="Black" Command="{Binding ClickDownCommand}" Height="35" Width="50"/>
+                                    <Button Grid.RowSpan="2" Grid.Column="2" Content="Right" Foreground="Black" Command="{Binding ClickRightCommand}" Height="35" Width="50"/>
+                                    <Button Grid.Column="4" Grid.Row="0" Content="Width++" Foreground="Black" Command="{Binding ClickIncreaseWidthCommand}" Height="35" Width="50"/>
+                                    <Button Grid.Column="4" Grid.Row="1" Content="Width--" Foreground="Black" Command="{Binding ClickDecreaseWidthCommand}" Height="35" Width="50"/>
+                                    <Button Grid.Column="5" Grid.Row="0" Content="Height++" Foreground="Black" Command="{Binding ClickIncreaseHeightCommand}" Height="35" Width="50"/>
+                                    <Button Grid.Column="5" Grid.Row="1" Content="Height--" Foreground="Black" Command="{Binding ClickDecreaseHeightCommand}" Height="35" Width="50"/>
                                 </Grid>
                                 <Grid Grid.Row="1" Margin="2">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <ComboBox ItemsSource="{Binding CharBox}" Width="100" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="14" VerticalAlignment="Center" Padding="0" SelectedItem="{Binding SelectedChar}" Margin="0,0,0,0" />
-                                    <ComboBox Grid.Column="1" ItemsSource="{Binding NumberBox}" Height="30" Width="100" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="14" VerticalAlignment="Center" Padding="0" SelectedItem="{Binding SelectedChar}" Margin="0,0,0,0" />
+                                    <TextBlock Grid.Column="0" Text="Label : " TextAlignment="Center" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Column="1" ItemsSource="{Binding CharBox}" Foreground="Black" Width="100" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontSize="14" VerticalAlignment="Center" Padding="0" SelectedItem="{Binding SelectedChar}" Margin="0,0,0,0" />
                                 </Grid>
                                 <!--xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding Configuration}" PropertyNameLeftPadding="10"/-->
                                 <Grid Grid.Row="2">
@@ -372,7 +418,7 @@
                                      ScrollViewer.VerticalScrollBarVisibility="Visible" ItemsSource="{Binding DisplayCollection, UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding SelectedDisplay}"/>
                             </Grid>
                             <Grid Grid.Row="1">
-                                <xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding Configuration}" PropertyNameLeftPadding="10"/>
+                                <xceed:PropertyGrid ShowSearchBox="False" ShowSortOptions="False" FontFamily="Sora Regular" FontSize="16" ShowSummary="False" NameColumnWidth="190" SelectedObject="{Binding SystemSetting}" PropertyNameLeftPadding="10"/>
                             </Grid>
                         </Grid>
                     </TabItem>
@@ -398,11 +444,29 @@
             <Button Grid.Column="0" Content="OpenFolder" Foreground="Black" Command="{Binding ClickFileCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"/>
             <Button Grid.Column="2" Content="Train Tool" Foreground="Black" Command="{Binding ClickProductionCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2">
             </Button>
-            <Button Grid.Column="4" Content="Test2" Foreground="Black" Command="{Binding ClickTeachCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2">
+            <Button Grid.Column="4" Content="Save Config" Foreground="Black" Command="{Binding ClickTeachCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2">
             </Button>
             <Button Grid.Column="6" Content="Run" Foreground="Black" Command="{Binding ClickRunCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2">
             </Button>
             <Button Grid.Column="8" Content="Create Annotations" Foreground="Black" Command="{Binding ClickCreateAnnotationCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}" Grid.ColumnSpan="2"/>
         </Grid>
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="17*"/>
+                <ColumnDefinition Width="63*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="80*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="80*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="80*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="Run Auto" Foreground="Black" Command="{Binding ClickRunAsynCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"/>
+            <Button Grid.Column="2" Content="Stop Run Auto" Foreground="Black" Command="{Binding ClickStopRunAsynCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"/>
+        </Grid>
     </Grid>
+  
 </UserControl>
