@@ -306,7 +306,7 @@ namespace AnnotationOpenSource.Shell
                 Images = new Mat(item.FileName, ImreadModes.Unchanged);
                 if (Images.Width == 0 || Images.Height == 0)
                 {
-                    var str = SelectedFile.FileName;
+                    var str = item.FileName;
                     SelectedFileIndex++;
                     FileBox.RemoveAt(SelectedFileIndex - 1);
                     File.Delete(str);

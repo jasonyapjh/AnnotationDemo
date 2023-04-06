@@ -102,7 +102,7 @@ namespace Base.Vision.Tool
         [PropertyOrder(7)]
         public RectColor RectColor { get; set; } = 0;
         [Browsable(false)]
-        public string ModelLocation { get; set; } = @"C:\\Users\\jason.yap\\Desktop\\ODOCR\\saved_model";
+        public string ModelLocation { get; set; } = @"C:\\Users\\jason.yap\\Desktop\\ODOCR\\saved_model_2";
 
         public AnnotationToolConfig()
         {
@@ -150,7 +150,7 @@ namespace Base.Vision.Tool
             }
         }
   
-        public string OcrDeepChar= new string(("0123456789ABCDEFGHKLMNUZ").ToArray());
+        public string OcrDeepChar= new string(("0123456789ABCDEFGHKLMNQUZ").ToArray());
         public string OutputString = "";
         public OpenCvSharp.Size ResizeFormat = new OpenCvSharp.Size(150, 150);
         public Keras.Models.BaseModel BaseModel = new Keras.Models.BaseModel();
@@ -472,8 +472,6 @@ namespace Base.Vision.Tool
                     method: ContourApproximationModes.ApproxSimple);
             var orderedContours2 = contours2.OrderBy(c => Cv2.BoundingRect(c).Y).OrderBy(a => Cv2.BoundingRect(a).X).ToArray();
 
-            OutputString = "";
-
             Mat DisplayImage = image.Clone();
             OutputString = "";
             for (int i = 0; i < orderedContours2.Length; i++)
@@ -511,10 +509,10 @@ namespace Base.Vision.Tool
 
 
                         Mat croppedChar = new Mat(image, biggestContourRect);
-                        Mat inverse = new Mat();
-                        Cv2.BitwiseNot(croppedChar, inverse);
-                        RunResult.ResultOutput.Add(new MatInfo(inverse, "", "inverse"));
-                        croppedChar = inverse;
+                      //  Mat inverse = new Mat();
+                       // Cv2.BitwiseNot(croppedChar, inverse);
+                      //  RunResult.ResultOutput.Add(new MatInfo(inverse, "", "inverse"));
+                      //  croppedChar = inverse;
                         croppedChar = croppedChar.Resize(new OpenCvSharp.Size(100, 100));
                         //Mat reshaped = croppedChar.Reshape(0, new int[] { 1, 100, 100, 1 });
                         //var graymat = croppedChar.CvtColor(ColorConversionCodes.BGR2GRAY);
@@ -534,12 +532,19 @@ namespace Base.Vision.Tool
 
                 }
             }
-            string test = OutputString.Insert(9, "-");
-            if (CheckSum.SEMI_CheckSum(test))
-                RunResult.Result = Result.Pass;
-            else
-                RunResult.Result = Result.Fail;
-
+            if (ReadyToInspect)
+            {
+                if (OutputString.Count() > 10)
+                {
+                    string test = OutputString.Insert(9, "-");
+                    if (CheckSum.SEMI_CheckSum(test))
+                        RunResult.Result = Result.Pass;
+                    else
+                        RunResult.Result = Result.Fail;
+                }
+                else
+                    RunResult.Result = Result.Fail;
+            }
             RunResult.ResultOutput.Add(new MatInfo(DisplayImage, "", "Found"));
             //RunResult.ResultOutputRect = ObtainedRect;
             RunResult.ResultTuple = OutputString;
