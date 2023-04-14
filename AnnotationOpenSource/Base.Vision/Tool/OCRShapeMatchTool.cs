@@ -491,8 +491,8 @@ namespace Base.Vision.Tool
                         biggestContourRect.Y = biggestContourRect.Y - offset;
                     else
                         biggestContourRect.Y = 0;
-                    biggestContourRect.X = biggestContourRect.X + 492;
-                    biggestContourRect.Y = biggestContourRect.Y + 353;
+                    biggestContourRect.X = biggestContourRect.X + (int)config.Search_ROI.Parameters[1];
+                    biggestContourRect.Y = biggestContourRect.Y + (int)config.Search_ROI.Parameters[0];
                     biggestContourRect.Width = biggestContourRect.Width + (offset * 2);
                     biggestContourRect.Height = biggestContourRect.Height + (offset * 2);
 
@@ -509,10 +509,10 @@ namespace Base.Vision.Tool
 
 
                         Mat croppedChar = new Mat(image, biggestContourRect);
-                      //  Mat inverse = new Mat();
-                       // Cv2.BitwiseNot(croppedChar, inverse);
-                      //  RunResult.ResultOutput.Add(new MatInfo(inverse, "", "inverse"));
-                      //  croppedChar = inverse;
+                        Mat inverse = new Mat();
+                        Cv2.BitwiseNot(croppedChar, inverse);
+                        RunResult.ResultOutput.Add(new MatInfo(inverse, "", "inverse"));
+                        croppedChar = inverse;
                         croppedChar = croppedChar.Resize(new OpenCvSharp.Size(100, 100));
                         //Mat reshaped = croppedChar.Reshape(0, new int[] { 1, 100, 100, 1 });
                         //var graymat = croppedChar.CvtColor(ColorConversionCodes.BGR2GRAY);

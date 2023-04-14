@@ -465,7 +465,7 @@
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
             <Button Grid.Column="0" Content="Run Auto" Foreground="Black" Command="{Binding ClickRunAsynCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"/>
-            <Button Grid.Column="2" Content="Stop Run Auto" Foreground="Black" Command="{Binding ClickStopRunAsynCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"/>
+            <Button Grid.Column="2" Content="Stop Run Auto" Foreground="Black" Command="{Binding ClickStopRunAsynCommand}" Width="{Binding ActualWidth, ElementName=NavigationPanel, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=NavigationPanel, Mode=OneWay}"  Grid.ColumnSpan="2"/>
         </Grid>
     </Grid>
   
