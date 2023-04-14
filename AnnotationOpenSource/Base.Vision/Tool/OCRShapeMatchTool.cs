@@ -503,7 +503,7 @@ namespace Base.Vision.Tool
                     else
                         Cv2.Rectangle(DisplayImage, biggestContourRect, new Scalar(255, 255, 255, 255), 3);
                    
-                    string outputchar = "A";
+                    string outputchar = "Character";
                     if (ReadyToInspect)
                     {
 

@@ -159,6 +159,9 @@ namespace AnnotationOpenSource.Shell
             m_SeqEngine.BeginMainSeq();
 
             SystemSetting = Containers.Resolve<AnnotationToolConfig>();
+            OCRTool = new OCRShapeMatchTool(SystemSetting);
+            string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
+            SystemSettingLoc = string.Format("{0}\\{1}", config_directory, "SystemSetting.Config");
             /*   string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
                Directory.CreateDirectory(config_directory);
 
