@@ -509,10 +509,10 @@ namespace Base.Vision.Tool
 
 
                         Mat croppedChar = new Mat(image, biggestContourRect);
-                      //  Mat inverse = new Mat();
-                       // Cv2.BitwiseNot(croppedChar, inverse);
-                      //  RunResult.ResultOutput.Add(new MatInfo(inverse, "", "inverse"));
-                      //  croppedChar = inverse;
+                        Mat inverse = new Mat();
+                        Cv2.BitwiseNot(croppedChar, inverse);
+                        RunResult.ResultOutput.Add(new MatInfo(inverse, "", "inverse"));
+                        croppedChar = inverse;
                         croppedChar = croppedChar.Resize(new OpenCvSharp.Size(100, 100));
                         //Mat reshaped = croppedChar.Reshape(0, new int[] { 1, 100, 100, 1 });
                         //var graymat = croppedChar.CvtColor(ColorConversionCodes.BGR2GRAY);
