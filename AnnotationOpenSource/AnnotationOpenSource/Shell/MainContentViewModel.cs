@@ -115,6 +115,7 @@ namespace AnnotationOpenSource.Shell
         public BackgroundWorker BGWorker;
         public bool InspAsyn = false;
         public bool InspDone = false;
+        public bool InspFail = false;
         private ISeqEngine m_SeqEngine;
         //public bool BGDone = false;
         private static object m_SyncObj = new object();
@@ -159,25 +160,25 @@ namespace AnnotationOpenSource.Shell
             m_SeqEngine.BeginMainSeq();
 
             SystemSetting = Containers.Resolve<AnnotationToolConfig>();
-            /*   string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
+               string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
                Directory.CreateDirectory(config_directory);
 
                SystemSettingLoc = string.Format("{0}\\{1}", config_directory, "SystemSetting.Config");
 
-               if (Extension.CheckFileExist(SystemSettingLoc))
-               {
-                   SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
-               }
-               else
-               {
-                   SystemSetting = new AnnotationToolConfig();
+            /*if (Extension.CheckFileExist(SystemSettingLoc))
+                           {
+                               SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
+                           }
+                           else
+                           {
+                               SystemSetting = new AnnotationToolConfig();
 
-                   Serializer.XmlSave(SystemSetting, SystemSettingLoc);
+                               Serializer.XmlSave(SystemSetting, SystemSettingLoc);
 
 
-               }*/
+                           }*/
 
-            // OCRTool = new OCRShapeMatchTool(SystemSetting);
+            OCRTool = new OCRShapeMatchTool(SystemSetting);
             /*  BGWorker = new BackgroundWorker();
               BGWorker.DoWork += backgroundWorker1_DoWork;
               BGWorker.WorkerSupportsCancellation = true;
@@ -212,7 +213,24 @@ namespace AnnotationOpenSource.Shell
                                 }
                                 if (evArg.InspectionData.Result == Result.Pass)
                                 {
-                                    CreateAnnotations();
+                                    foreach (var item in EnableRegionCollection.ToList())
+                                    {
+                                        if (LabelCounter.Any(x => x.Label == item.Key))
+                                        {
+                                            var c = LabelCounter.Where(x => x.Label == item.Key);
+                                           // if (c.FirstOrDefault<LabelCount>().Count > 60)
+                                           // {
+                                            //    EnableRegionCollection.Remove(item);
+                                           // }
+                                        }
+
+                                    }
+                                    
+
+                                    //
+                                    if(EnableRegionCollection.Count()>0)
+                                        CreateAnnotations();
+
                                     ProcessImage++;
                                     if (SelectedFileIndex <= counter)
                                     {
@@ -225,6 +243,7 @@ namespace AnnotationOpenSource.Shell
                                 }
                                 else
                                 {
+                                    InspFail = true;
                                     System.Windows.Forms.MessageBox.Show("Insp Fail");
                                 }
                                 break;
@@ -321,7 +340,12 @@ namespace AnnotationOpenSource.Shell
             //  InspDone = true;
 
             // BGWorker.RunWorkerAsync();
-         
+            if(InspFail)
+            {
+                InspFail = false;
+                m_SeqEngine.BeginMainSeq();
+                Thread.Sleep(1000);
+            }
             m_SeqEngine.SeqSingleTrigger(0);
             m_SeqEngine.SendMatImage(0, Images);
         }
@@ -642,6 +666,7 @@ namespace AnnotationOpenSource.Shell
             }
 
             bool AutoCreate = false;
+        
             if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
@@ -668,10 +693,26 @@ namespace AnnotationOpenSource.Shell
         }
         private void OnClickRunCommand(object obj)
         {
-            /*LabelCounter.Clear();
-            string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
+           /* string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
+            Rect RealSearchROI = Rect.FromLTRB((int)SystemSetting.Search_ROI.Parameters[1], (int)SystemSetting.Search_ROI.Parameters[0], (int)SystemSetting.Search_ROI.Parameters[3], (int)SystemSetting.Search_ROI.Parameters[2]);
+            foreach(var file in FileBox)
+            {
+                Mat image = new Mat(file.FileName.ToString(), ImreadModes.Unchanged);
+               
+                if (image.Width != 0 || image.Height != 0)
+                {
+                    Mat cropped = new Mat(image, RealSearchROI);
+                    string savefile = string.Format("{0}\\{1}\\{2}_{3}", folderDirectory, "Cropped", "Crop", System.IO.Path.GetFileName(file.FileName));
+                    cropped.ImWrite(savefile);
+                    image.Dispose();
+                    cropped.Dispose();
+                }
+
+            }*/
+            /*string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
             foreach (var file in FileBox)
             {
+         
                 if (file.Done)
                 {
                     var fileXml = System.IO.Path.ChangeExtension(file.FileName.ToString(), ".xml");
@@ -716,12 +757,12 @@ namespace AnnotationOpenSource.Shell
                 }
             }
             System.Windows.MessageBox.Show("Done Creation!");*/
-              RunInspection();
+            RunInspection();
         }
 
         private void OnTeachCommand(object obj)
         {
-            Serializer.XmlSave(SystemSetting, SystemSettingLoc);
+            Serializer.XmlSave(Containers.Resolve<AnnotationToolConfig>(), SystemSettingLoc);
         }
 
         private void OnPreviewMouseMove(object obj)
@@ -819,6 +860,9 @@ namespace AnnotationOpenSource.Shell
                 SetProperty(ref m_selectedfile, value);
                 if (value != null)
                 {
+                    if (Images != null)
+                        Images.Dispose();
+
                     Images = new Mat(SelectedFile.FileName, ImreadModes.Unchanged);
                     if (Images.Width != 0 || Images.Height != 0)
                     {
