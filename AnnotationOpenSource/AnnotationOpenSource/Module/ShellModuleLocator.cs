@@ -6,21 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Base.Sequence;
-using Base.Sequence.ThreadServer;
-using Base.ConfigServer;
-using Base.Common;
-using System.Threading;
-using System.Windows.Media.Media3D;
-using Timer = Base.Common.Timer;
-using System.IO;
-using Base.Vision.Tool;
 
 namespace AnnotationOpenSource.Module
 {
     public class ShellModuleLocator : IModule
     {
-        public AnnotationToolConfig SystemSetting;
+        //public SystemSetting SystemSetting;
         //public RecipeSetting RecipeSettings;
         public ShellModuleLocator()
         {
@@ -35,66 +26,6 @@ namespace AnnotationOpenSource.Module
         {
             containerRegistry.RegisterForNavigation<Shell.Shell, ShellViewModel>();
             containerRegistry.RegisterForNavigation<MainContent, MainContentViewModel>();
-
-            string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
-            Directory.CreateDirectory(config_directory);
-
-            var SystemSettingLoc = string.Format("{0}\\{1}", config_directory, "SystemSetting.Config");
-
-            if (Extension.CheckFileExist(SystemSettingLoc))
-            {
-                SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
-            }
-            else
-            {
-                SystemSetting = new AnnotationToolConfig();
-
-                Serializer.XmlSave(SystemSetting, SystemSettingLoc);
-            }
-            containerRegistry.RegisterInstance<AnnotationToolConfig>(SystemSetting);
-            //--------------------------//
-            // --- Sequence Setting --- //
-            //--------------------------//
-            List<SequenceSetting> seqCfgs = new List<SequenceSetting>();
-            containerRegistry.RegisterInstance<List<SequenceSetting>>(seqCfgs);
-            seqCfgs.Add(new SequenceSetting() { SeqID = 0, SeqName = "First Thread", PollInterval = 1, DelayTimers= new List<Timer>(), ErrorTimers=new List<Timer>() });
-          /*  foreach (SequenceConfig seqCfg in SystemSetting.SequenceConfigList)
-            {
-                // Sequence Setting
-                seqCfgs.Add((SequenceSetting)Serializer.XmlLoad(typeof(SequenceSetting), seqCfg.Reference));
-            }*/
-            //------------------------------//
-            // --- Thread Server object --- //
-            //------------------------------//
-            int totalModule = 1;
-            IThreadEngine IThreadEngine = new CThreadEngine(totalModule);
-            containerRegistry.RegisterInstance<IThreadEngine>(IThreadEngine);
-            //----------------------------//
-            //  --- Seq Server Object --- //
-            //----------------------------//
-            Base.Sequence.Framework.ISeqEngine ISeqEngine = new SeqEngine();
-       
-            containerRegistry.RegisterInstance<Base.Sequence.Framework.ISeqEngine>(ISeqEngine);
-            // ISeqEngine.SetRecipeCfg(RecipeSettings);
-           
-
-            ISeqEngine.BuildSeqEngine();
-            ISeqEngine.SetAnnotationCfg(0, SystemSetting);
-            #region [9] Thread Server component object initialization
-            /******************************************************************/
-            /**  Thread Server component object initialization				 **/
-            /******************************************************************/
-
-            for (int i = 0; i < totalModule; i++)
-            {
-                IThreadEngine.Loop_Entry = ISeqEngine.GetLoopEntry(i);
-                IThreadEngine.Module_Name = seqCfgs[i].SeqName;
-                IThreadEngine.Interval = seqCfgs[i].PollInterval;
-                IThreadEngine.Priority_Level = ThreadPriority.AboveNormal;
-
-            }
-            IThreadEngine.Start("a");
-            #endregion
             /*  containerRegistry.RegisterForNavigation<Workspace.Production.Production, Workspace.Production.ProductionViewModel>();
               containerRegistry.RegisterForNavigation<VisionUI.VisionToolControl, VisionUI.VisionToolControlViewModel>();
               containerRegistry.RegisterInstance(new Base.Vision.HWindow.HWindowInspectionViewModel(), ScreenEntity.LeftInspHWindow);
@@ -146,7 +77,12 @@ namespace AnnotationOpenSource.Module
 
 
 
-           
+              //------------------------------//
+              // --- Thread Server object --- //
+              //------------------------------//
+              int totalModule = SystemSetting.Machine.NumOfSeq;
+              IThreadEngine IThreadEngine = new CThreadEngine(totalModule);
+              containerRegistry.RegisterInstance<IThreadEngine>(IThreadEngine);
 
               //------------------------//
               // --- Recipe Settings--- //

@@ -100,7 +100,7 @@ namespace Base.Sequence.InspSeq
                         break;
                     // ------------------------------------------
                     case SN.LoadModel:
-                        //OCRShapeMatchTool.Setup(out InspectionData test);
+                        OCRShapeMatchTool.Setup(out InspectionData test);
                        SeqNum = SN.SetReady;
                         break;
                     case SN.BeginScan:
@@ -108,7 +108,6 @@ namespace Base.Sequence.InspSeq
                         m_IsACKStateChanged = false;
                         SeqNum = SN.SetReady;
                         OCRShapeMatchTool = new OCRShapeMatchTool(AnnotationToolConfig);
-                        OCRShapeMatchTool.Setup(out InspectionData test);
                         break;
 
                     case SN.SetReady: // <-- LOOP BACK
@@ -193,13 +192,11 @@ namespace Base.Sequence.InspSeq
                     case SN.InspectImage: // <-- RETEST
                         OCRShapeMatchTool.Run(GrabbedImage, out InspectionData resultdata);
 
+
+
                         RaiseEvent2UI(new ImageInspectedEventArgs(0, resultdata));
 
-                        if (resultdata.Result == Result.Pass)
-                            SeqNum = SN.SetResult;
-                        else
-                            SeqNum = SN.EOS;
-
+                        SeqNum = SN.SetResult;
                         break;
                     case SN.SetResult: // <--
                         {

@@ -127,9 +127,8 @@ namespace Base.Sequence
 
         public void SeqSingleTrigger(int idx)
         {
-            
+            //m_BaseSeq[idx].Reset();
             m_BaseSeq[idx].SequenceTrigger = true;
-            //m_BaseSeq[i].Start();
         }
 
     
