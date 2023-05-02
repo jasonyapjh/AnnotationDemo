@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Base.ConfigServer", "..\..\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Base.Vision", "Base.Vision\Base.Vision.csproj", "{823A9E98-9530-4036-AB9C-659B1737F2FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Base.Sequence", "Base.Sequence\Base.Sequence.csproj", "{483B836D-5F35-42CA-A666-9BEDA303D67F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,14 +61,6 @@ Global
 		{823A9E98-9530-4036-AB9C-659B1737F2FA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{823A9E98-9530-4036-AB9C-659B1737F2FA}.Release|x64.ActiveCfg = Release|Any CPU
 		{823A9E98-9530-4036-AB9C-659B1737F2FA}.Release|x64.Build.0 = Release|Any CPU
-		{483B836D-5F35-42CA-A666-9BEDA303D67F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{483B836D-5F35-42CA-A666-9BEDA303D67F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{483B836D-5F35-42CA-A666-9BEDA303D67F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{483B836D-5F35-42CA-A666-9BEDA303D67F}.Debug|x64.Build.0 = Debug|Any CPU
-		{483B836D-5F35-42CA-A666-9BEDA303D67F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{483B836D-5F35-42CA-A666-9BEDA303D67F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{483B836D-5F35-42CA-A666-9BEDA303D67F}.Release|x64.ActiveCfg = Release|Any CPU
-		{483B836D-5F35-42CA-A666-9BEDA303D67F}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -162,25 +162,25 @@ namespace AnnotationOpenSource.Shell
             m_SeqEngine.BeginMainSeq();
 
             SystemSetting = Containers.Resolve<AnnotationToolConfig>();
-               string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
+            /*   string config_directory = System.IO.Path.GetFullPath(@"..\") + "System Setting";
                Directory.CreateDirectory(config_directory);
 
                SystemSettingLoc = string.Format("{0}\\{1}", config_directory, "SystemSetting.Config");
 
-            /*if (Extension.CheckFileExist(SystemSettingLoc))
-                           {
-                               SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
-                           }
-                           else
-                           {
-                               SystemSetting = new AnnotationToolConfig();
+               if (Extension.CheckFileExist(SystemSettingLoc))
+               {
+                   SystemSetting = (AnnotationToolConfig)Serializer.XmlLoad(typeof(AnnotationToolConfig), SystemSettingLoc);
+               }
+               else
+               {
+                   SystemSetting = new AnnotationToolConfig();
 
-                               Serializer.XmlSave(SystemSetting, SystemSettingLoc);
+                   Serializer.XmlSave(SystemSetting, SystemSettingLoc);
 
 
-                           }*/
+               }*/
 
-            OCRTool = new OCRShapeMatchTool(SystemSetting);
+            // OCRTool = new OCRShapeMatchTool(SystemSetting);
             /*  BGWorker = new BackgroundWorker();
               BGWorker.DoWork += backgroundWorker1_DoWork;
               BGWorker.WorkerSupportsCancellation = true;
@@ -215,24 +215,7 @@ namespace AnnotationOpenSource.Shell
                                 }
                                 if (evArg.InspectionData.Result == Result.Pass)
                                 {
-                                    foreach (var item in EnableRegionCollection.ToList())
-                                    {
-                                        if (LabelCounter.Any(x => x.Label == item.Key))
-                                        {
-                                            var c = LabelCounter.Where(x => x.Label == item.Key);
-                                           // if (c.FirstOrDefault<LabelCount>().Count > 60)
-                                           // {
-                                            //    EnableRegionCollection.Remove(item);
-                                           // }
-                                        }
-
-                                    }
-                                    
-
-                                    //
-                                    if(EnableRegionCollection.Count()>0)
-                                        CreateAnnotations();
-
+                                    CreateAnnotations();
                                     ProcessImage++;
                                     if (SelectedFileIndex <= counter)
                                     {
@@ -689,7 +672,6 @@ namespace AnnotationOpenSource.Shell
             }
 
             bool AutoCreate = false;
-        
             if (OCRTool.Run(Images, out InspectionData test))
             {
                 DisplayCollection.Clear();
@@ -737,7 +719,6 @@ namespace AnnotationOpenSource.Shell
             string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
             foreach (var file in FileBox)
             {
-         
                 if (file.Done)
                 {
                     var fileXml = System.IO.Path.ChangeExtension(file.FileName.ToString(), ".xml");
@@ -787,7 +768,7 @@ namespace AnnotationOpenSource.Shell
 
         private void OnTeachCommand(object obj)
         {
-            Serializer.XmlSave(Containers.Resolve<AnnotationToolConfig>(), SystemSettingLoc);
+            Serializer.XmlSave(SystemSetting, SystemSettingLoc);
         }
 
         private void OnPreviewMouseMove(object obj)
@@ -885,9 +866,6 @@ namespace AnnotationOpenSource.Shell
                 SetProperty(ref m_selectedfile, value);
                 if (value != null)
                 {
-                    if (Images != null)
-                        Images.Dispose();
-
                     Images = new Mat(SelectedFile.FileName, ImreadModes.Unchanged);
                     if (Images.Width != 0 || Images.Height != 0)
                     {
