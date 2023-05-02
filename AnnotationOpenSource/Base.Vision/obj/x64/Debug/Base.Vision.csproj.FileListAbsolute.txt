@@ -101,6 +101,7 @@ C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\System.Numerics.Vectors.xml
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.xml
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Tensorflow.Binding.xml
+C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Xceed.Wpf.Toolkit.pdb
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Prism.Wpf.pdb
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\Prism.Wpf.xml
 C:\Users\PC\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Vision\bin\x64\Debug\log4net.xml
