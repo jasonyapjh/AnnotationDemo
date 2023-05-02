@@ -71,14 +71,12 @@ namespace Base.Vision.Framework
         }
 
         #region IDisposable members.
-        /* public virtual void Dispose()
+        public virtual void Dispose()
          {
-             if (ImageInfo != null)
-             {
-                 ImageInfo.Dispose();
-                 ImageInfo = null;
-             }
-         }*/
+            Result = Result.Undefined;
+            ResultOutput.Clear();
+            ResultOutputRect.Clear();
+         }
         #endregion
     }
     public class RectInfo

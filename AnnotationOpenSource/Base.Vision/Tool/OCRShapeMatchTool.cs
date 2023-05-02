@@ -154,9 +154,10 @@ namespace Base.Vision.Tool
         public string OutputString = "";
         public OpenCvSharp.Size ResizeFormat = new OpenCvSharp.Size(150, 150);
         public Keras.Models.BaseModel BaseModel = new Keras.Models.BaseModel();
+        InspectionData RunResult = new InspectionData();
         private void Config_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            ReadyToInspect = false;
+            //ReadyToInspect = false;
         }
         public OCRShapeMatchTool(AnnotationToolConfig config)
         {
@@ -432,7 +433,7 @@ namespace Base.Vision.Tool
         }
         public bool Run(Mat source, out InspectionData inspectionData)
         {
-            InspectionData RunResult = new InspectionData();
+            RunResult.Dispose();
 
             Mat image = source.Clone();
 

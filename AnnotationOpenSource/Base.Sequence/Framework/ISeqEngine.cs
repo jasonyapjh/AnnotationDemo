@@ -14,7 +14,7 @@ namespace Base.Sequence.Framework
         bool IsMachineReady();
         bool IsSequenceReady(int idx);
         bool IsOperationComplete();
-     
+        void ResumeRequest(int idx);
         void SeqSingleTrigger(int idx);
         void SeqLoadModel(int idx);
         void BuildSeqEngine();
@@ -25,7 +25,7 @@ namespace Base.Sequence.Framework
         void BeginMainSeq();
         void SeqCallBack(EventHandler seqEvent);
         void SendMatImage(int idx,Mat image);
-       
+        void StopRequest();
         void InitRequest(bool state);
         void ChangeRecipeRequest(bool state);
 

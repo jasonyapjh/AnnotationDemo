@@ -1,14 +1,10 @@
-C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.csproj.AssemblyReference.cache
-C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.csproj.CoreCompileInputs.cache
-C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Base.Sequence.dll
-C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Base.Sequence.pdb
-C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.dll
-C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.pdb
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\dll\x86\OpenCvSharpExtern.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\dll\x86\opencv_videoio_ffmpeg455.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\dll\x64\OpenCvSharpExtern.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\dll\x64\opencv_videoio_ffmpeg455_64.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Base.Sequence.dll.config
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Base.Sequence.dll
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Base.Sequence.pdb
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Base.Common.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Base.dll
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Base.Vision.dll
@@ -48,4 +44,8 @@ C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequenc
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Python.Runtime.xml
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Microsoft.Xaml.Behaviors.pdb
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\bin\Debug\Microsoft.Xaml.Behaviors.xml
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.csproj.AssemblyReference.cache
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.csproj.CoreCompileInputs.cache
 C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.csproj.CopyComplete
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.dll
+C:\Users\jason.yap\source\repos\AnnotationDemo\AnnotationOpenSource\Base.Sequence\obj\Debug\Base.Sequence.pdb

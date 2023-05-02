@@ -116,6 +116,8 @@ namespace AnnotationOpenSource.Shell
         public bool InspAsyn = false;
         public bool InspDone = false;
         public bool InspFail = false;
+        public bool UserStop = false;
+        public bool FirstStart = true;
         private ISeqEngine m_SeqEngine;
         //public bool BGDone = false;
         private static object m_SyncObj = new object();
@@ -241,10 +243,14 @@ namespace AnnotationOpenSource.Shell
                                         System.Windows.Forms.MessageBox.Show("Insp Done");
                                     }
                                 }
-                                else
+                               else
                                 {
-                                    InspFail = true;
-                                    System.Windows.Forms.MessageBox.Show("Insp Fail");
+                                    if (SelectedFileIndex <= counter)
+                                    {
+                                        SelectedFileIndex++;
+                                    }
+                                    //InspFail = true;
+                                    //System.Windows.Forms.MessageBox.Show("Insp Fail");
                                 }
                                 break;
                         }
@@ -259,6 +265,7 @@ namespace AnnotationOpenSource.Shell
                         switch (evArg.Seq_ID)
                         {
                             case 0:
+
                                 m_SeqEngine.SendMatImage(evArg.Seq_ID, Images);
                                 break;
                         }
@@ -330,7 +337,9 @@ namespace AnnotationOpenSource.Shell
             
            // BGWorker.CancelAsync();
             InspAsyn = false;
-            m_SeqEngine.EndMachineLot(true);
+            //m_SeqEngine.EndMachineLot(true);
+            m_SeqEngine.StopRequest();
+            UserStop = true;
         }
 
         private void OnRunAsyn(object obj)
@@ -340,10 +349,22 @@ namespace AnnotationOpenSource.Shell
             //  InspDone = true;
 
             // BGWorker.RunWorkerAsync();
+            if(FirstStart)
+            {
+                FirstStart = false;
+                m_SeqEngine.BeginMainSeq();
+                Thread.Sleep(1000);
+            }
             if(InspFail)
             {
                 InspFail = false;
                 m_SeqEngine.BeginMainSeq();
+                Thread.Sleep(1000);
+            }
+            if(UserStop)
+            {
+                UserStop = false;
+                m_SeqEngine.ResumeRequest(0);
                 Thread.Sleep(1000);
             }
             m_SeqEngine.SeqSingleTrigger(0);
@@ -465,6 +486,7 @@ namespace AnnotationOpenSource.Shell
             File.Delete(str);
             //SelectedFileIndex++;
             TotalImage--;
+            Thread.Sleep(200);
         }
 
         private void OnDeleteBox(object obj)
@@ -596,6 +618,7 @@ namespace AnnotationOpenSource.Shell
                             var file = System.IO.Path.ChangeExtension(files[i].ToString(), ".xml");
                             if(Extension.CheckFileExist(file))
                             {
+                                // temp remove this so only unprocess image is added
                                 FileBox.Add(new FileCollector(files[i].ToString()) { Done = true });
                                 ProcessImage++;
                                 using (AnnotationConfig config = (AnnotationConfig)Serializer.XmlLoad(typeof(AnnotationConfig), file))
@@ -693,9 +716,10 @@ namespace AnnotationOpenSource.Shell
         }
         private void OnClickRunCommand(object obj)
         {
-           /* string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
-            Rect RealSearchROI = Rect.FromLTRB((int)SystemSetting.Search_ROI.Parameters[1], (int)SystemSetting.Search_ROI.Parameters[0], (int)SystemSetting.Search_ROI.Parameters[3], (int)SystemSetting.Search_ROI.Parameters[2]);
-            foreach(var file in FileBox)
+            /*string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
+            Rect RealSearchROI = Rect.FromLTRB((int)490, (int)326, (int)1590, (int)546);
+            //Rect RealSearchROI = Rect.FromLTRB((int)SystemSetting.Search_ROI.Parameters[1], (int)SystemSetting.Search_ROI.Parameters[0], (int)SystemSetting.Search_ROI.Parameters[3], (int)SystemSetting.Search_ROI.Parameters[2]);
+            foreach (var file in FileBox)
             {
                 Mat image = new Mat(file.FileName.ToString(), ImreadModes.Unchanged);
                
@@ -709,7 +733,8 @@ namespace AnnotationOpenSource.Shell
                 }
 
             }*/
-            /*string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
+            LabelCounter.Clear();
+            string folderDirectory = System.IO.Path.GetDirectoryName(FileBox[0].FileName);
             foreach (var file in FileBox)
             {
          
@@ -756,8 +781,8 @@ namespace AnnotationOpenSource.Shell
                     }
                 }
             }
-            System.Windows.MessageBox.Show("Done Creation!");*/
-            RunInspection();
+            System.Windows.MessageBox.Show("Done Creation!");
+            // RunInspection();
         }
 
         private void OnTeachCommand(object obj)
@@ -1194,3 +1219,4 @@ namespace AnnotationOpenSource.Shell
 
     }
 }
+

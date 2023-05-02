@@ -244,7 +244,7 @@ namespace Base.Sequence
         }
         internal void Stop()
         {
-            m_UIStopRequest = true;
+             m_UIStopRequest = true;
         }
         internal void ResetTool()
         {
