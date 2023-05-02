@@ -1,8 +1,0 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-/AnnotationOpenSource/.vs/AnnotationOpenSource/v17/.suo
-*.vsidx
-/AnnotationOpenSource/AnnotationOpenSource/bin/x64/Debug/Base.Sequence.dll
-/AnnotationOpenSource/AnnotationOpenSource/bin/x64/Debug/Base.Vision.pdb

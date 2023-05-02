@@ -47,20 +47,8 @@ namespace Base.Sequence
             }
         }
 
-        public void ResumeRequest(int idx)
-        {
-            for (int i = 0; i < m_TotalModule; i++)
-            {
-                m_BaseSeq[i].Resume();
-            }
-        }
-        public void StopRequest()
-        {
-            for (int i = 0; i < m_TotalModule; i++)
-            {
-                m_BaseSeq[i].Stop();
-            }
-        }
+      
+
         public void ChangeRecipeRequest(bool state)
         {
          //   throw new NotImplementedException();

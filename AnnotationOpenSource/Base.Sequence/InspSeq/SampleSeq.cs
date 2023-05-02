@@ -165,8 +165,7 @@ namespace Base.Sequence.InspSeq
                             // Reset variable.
                             m_UIResumeRequest = false;
                             // Always resume to SN.Begin.
-                            //SeqNum = SN.Begin;
-                            SeqNum = SN.SetReady;
+                            SeqNum = SN.Begin;
                         }
                         break;
                     // ------------------------------------------
@@ -199,8 +198,7 @@ namespace Base.Sequence.InspSeq
                         if (resultdata.Result == Result.Pass)
                             SeqNum = SN.SetResult;
                         else
-                            SeqNum = SN.SetResult;
-                        // SeqNum = SN.EOS;
+                            SeqNum = SN.EOS;
 
                         break;
                     case SN.SetResult: // <--
